@@ -7,13 +7,55 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5F4DF9392E70EEC10098917B /* UIKitCompatKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 5F4DF9382E70EEC10098917B /* UIKitCompatKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		5F4DF9582E70EEE60098917B /* BridgingHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 5F4DF9412E70EEE60098917B /* BridgingHeader.h */; };
+		5F4DF9592E70EEE60098917B /* NSLayoutConstraint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F4DF9422E70EEE60098917B /* NSLayoutConstraint.swift */; };
+		5F4DF95A2E70EEE60098917B /* .gitkeep in Resources */ = {isa = PBXBuildFile; fileRef = 5F4DF9442E70EEE60098917B /* .gitkeep */; };
+		5F4DF95B2E70EEE60098917B /* _OALayoutGuide.h in Headers */ = {isa = PBXBuildFile; fileRef = 5F4DF9452E70EEE60098917B /* _OALayoutGuide.h */; };
+		5F4DF95C2E70EEE60098917B /* _OALayoutGuide.m in Sources */ = {isa = PBXBuildFile; fileRef = 5F4DF9462E70EEE60098917B /* _OALayoutGuide.m */; };
+		5F4DF95D2E70EEE60098917B /* OAStackView+Constraint.h in Headers */ = {isa = PBXBuildFile; fileRef = 5F4DF9472E70EEE60098917B /* OAStackView+Constraint.h */; };
+		5F4DF95E2E70EEE60098917B /* OAStackView+Constraint.m in Sources */ = {isa = PBXBuildFile; fileRef = 5F4DF9482E70EEE60098917B /* OAStackView+Constraint.m */; };
+		5F4DF95F2E70EEE60098917B /* OAStackView+Hiding.h in Headers */ = {isa = PBXBuildFile; fileRef = 5F4DF9492E70EEE60098917B /* OAStackView+Hiding.h */; };
+		5F4DF9602E70EEE60098917B /* OAStackView+Hiding.m in Sources */ = {isa = PBXBuildFile; fileRef = 5F4DF94A2E70EEE60098917B /* OAStackView+Hiding.m */; };
+		5F4DF9612E70EEE60098917B /* OAStackView+Traversal.h in Headers */ = {isa = PBXBuildFile; fileRef = 5F4DF94B2E70EEE60098917B /* OAStackView+Traversal.h */; };
+		5F4DF9622E70EEE60098917B /* OAStackView+Traversal.m in Sources */ = {isa = PBXBuildFile; fileRef = 5F4DF94C2E70EEE60098917B /* OAStackView+Traversal.m */; };
+		5F4DF9632E70EEE60098917B /* OAStackView.h in Headers */ = {isa = PBXBuildFile; fileRef = 5F4DF94D2E70EEE60098917B /* OAStackView.h */; };
+		5F4DF9642E70EEE60098917B /* OAStackView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5F4DF94E2E70EEE60098917B /* OAStackView.m */; };
+		5F4DF9652E70EEE60098917B /* OAStackViewAlignmentStrategy.h in Headers */ = {isa = PBXBuildFile; fileRef = 5F4DF94F2E70EEE60098917B /* OAStackViewAlignmentStrategy.h */; };
+		5F4DF9662E70EEE60098917B /* OAStackViewAlignmentStrategy.m in Sources */ = {isa = PBXBuildFile; fileRef = 5F4DF9502E70EEE60098917B /* OAStackViewAlignmentStrategy.m */; };
+		5F4DF9672E70EEE60098917B /* OAStackViewAlignmentStrategyBaseline.h in Headers */ = {isa = PBXBuildFile; fileRef = 5F4DF9512E70EEE60098917B /* OAStackViewAlignmentStrategyBaseline.h */; };
+		5F4DF9682E70EEE60098917B /* OAStackViewAlignmentStrategyBaseline.m in Sources */ = {isa = PBXBuildFile; fileRef = 5F4DF9522E70EEE60098917B /* OAStackViewAlignmentStrategyBaseline.m */; };
+		5F4DF9692E70EEE60098917B /* OAStackViewDistributionStrategy.h in Headers */ = {isa = PBXBuildFile; fileRef = 5F4DF9532E70EEE60098917B /* OAStackViewDistributionStrategy.h */; };
+		5F4DF96A2E70EEE60098917B /* OAStackViewDistributionStrategy.m in Sources */ = {isa = PBXBuildFile; fileRef = 5F4DF9542E70EEE60098917B /* OAStackViewDistributionStrategy.m */; };
+		5F4DF96B2E70EEE60098917B /* OATransformLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 5F4DF9552E70EEE60098917B /* OATransformLayer.h */; };
+		5F4DF96C2E70EEE60098917B /* OATransformLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 5F4DF9562E70EEE60098917B /* OATransformLayer.m */; };
+		5F4DF96D2E70EEE60098917B /* UIStackViewTypeAlias.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F4DF9572E70EEE60098917B /* UIStackViewTypeAlias.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		5F4DF9352E70EEC10098917B /* UIKitCompatKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = UIKitCompatKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		5F4DF9382E70EEC10098917B /* UIKitCompatKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UIKitCompatKit.h; sourceTree = "<group>"; };
 		5F4DF93A2E70EEC10098917B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5F4DF9412E70EEE60098917B /* BridgingHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = "<group>"; };
+		5F4DF9422E70EEE60098917B /* NSLayoutConstraint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NSLayoutConstraint.swift; sourceTree = "<group>"; };
+		5F4DF9442E70EEE60098917B /* .gitkeep */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitkeep; sourceTree = "<group>"; };
+		5F4DF9452E70EEE60098917B /* _OALayoutGuide.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _OALayoutGuide.h; sourceTree = "<group>"; };
+		5F4DF9462E70EEE60098917B /* _OALayoutGuide.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _OALayoutGuide.m; sourceTree = "<group>"; };
+		5F4DF9472E70EEE60098917B /* OAStackView+Constraint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OAStackView+Constraint.h"; sourceTree = "<group>"; };
+		5F4DF9482E70EEE60098917B /* OAStackView+Constraint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OAStackView+Constraint.m"; sourceTree = "<group>"; };
+		5F4DF9492E70EEE60098917B /* OAStackView+Hiding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OAStackView+Hiding.h"; sourceTree = "<group>"; };
+		5F4DF94A2E70EEE60098917B /* OAStackView+Hiding.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OAStackView+Hiding.m"; sourceTree = "<group>"; };
+		5F4DF94B2E70EEE60098917B /* OAStackView+Traversal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "OAStackView+Traversal.h"; sourceTree = "<group>"; };
+		5F4DF94C2E70EEE60098917B /* OAStackView+Traversal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "OAStackView+Traversal.m"; sourceTree = "<group>"; };
+		5F4DF94D2E70EEE60098917B /* OAStackView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OAStackView.h; sourceTree = "<group>"; };
+		5F4DF94E2E70EEE60098917B /* OAStackView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OAStackView.m; sourceTree = "<group>"; };
+		5F4DF94F2E70EEE60098917B /* OAStackViewAlignmentStrategy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OAStackViewAlignmentStrategy.h; sourceTree = "<group>"; };
+		5F4DF9502E70EEE60098917B /* OAStackViewAlignmentStrategy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OAStackViewAlignmentStrategy.m; sourceTree = "<group>"; };
+		5F4DF9512E70EEE60098917B /* OAStackViewAlignmentStrategyBaseline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OAStackViewAlignmentStrategyBaseline.h; sourceTree = "<group>"; };
+		5F4DF9522E70EEE60098917B /* OAStackViewAlignmentStrategyBaseline.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OAStackViewAlignmentStrategyBaseline.m; sourceTree = "<group>"; };
+		5F4DF9532E70EEE60098917B /* OAStackViewDistributionStrategy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OAStackViewDistributionStrategy.h; sourceTree = "<group>"; };
+		5F4DF9542E70EEE60098917B /* OAStackViewDistributionStrategy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OAStackViewDistributionStrategy.m; sourceTree = "<group>"; };
+		5F4DF9552E70EEE60098917B /* OATransformLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OATransformLayer.h; sourceTree = "<group>"; };
+		5F4DF9562E70EEE60098917B /* OATransformLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OATransformLayer.m; sourceTree = "<group>"; };
+		5F4DF9572E70EEE60098917B /* UIStackViewTypeAlias.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIStackViewTypeAlias.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,10 +88,47 @@
 		5F4DF9372E70EEC10098917B /* UIKitCompatKit */ = {
 			isa = PBXGroup;
 			children = (
-				5F4DF9382E70EEC10098917B /* UIKitCompatKit.h */,
+				5F4DF9402E70EEE60098917B /* UIKitCompatKit */,
 				5F4DF93A2E70EEC10098917B /* Info.plist */,
 			);
 			path = UIKitCompatKit;
+			sourceTree = "<group>";
+		};
+		5F4DF9402E70EEE60098917B /* UIKitCompatKit */ = {
+			isa = PBXGroup;
+			children = (
+				5F4DF9412E70EEE60098917B /* BridgingHeader.h */,
+				5F4DF9422E70EEE60098917B /* NSLayoutConstraint.swift */,
+				5F4DF9432E70EEE60098917B /* OAStackView */,
+			);
+			path = UIKitCompatKit;
+			sourceTree = "<group>";
+		};
+		5F4DF9432E70EEE60098917B /* OAStackView */ = {
+			isa = PBXGroup;
+			children = (
+				5F4DF9442E70EEE60098917B /* .gitkeep */,
+				5F4DF9452E70EEE60098917B /* _OALayoutGuide.h */,
+				5F4DF9462E70EEE60098917B /* _OALayoutGuide.m */,
+				5F4DF9472E70EEE60098917B /* OAStackView+Constraint.h */,
+				5F4DF9482E70EEE60098917B /* OAStackView+Constraint.m */,
+				5F4DF9492E70EEE60098917B /* OAStackView+Hiding.h */,
+				5F4DF94A2E70EEE60098917B /* OAStackView+Hiding.m */,
+				5F4DF94B2E70EEE60098917B /* OAStackView+Traversal.h */,
+				5F4DF94C2E70EEE60098917B /* OAStackView+Traversal.m */,
+				5F4DF94D2E70EEE60098917B /* OAStackView.h */,
+				5F4DF94E2E70EEE60098917B /* OAStackView.m */,
+				5F4DF94F2E70EEE60098917B /* OAStackViewAlignmentStrategy.h */,
+				5F4DF9502E70EEE60098917B /* OAStackViewAlignmentStrategy.m */,
+				5F4DF9512E70EEE60098917B /* OAStackViewAlignmentStrategyBaseline.h */,
+				5F4DF9522E70EEE60098917B /* OAStackViewAlignmentStrategyBaseline.m */,
+				5F4DF9532E70EEE60098917B /* OAStackViewDistributionStrategy.h */,
+				5F4DF9542E70EEE60098917B /* OAStackViewDistributionStrategy.m */,
+				5F4DF9552E70EEE60098917B /* OATransformLayer.h */,
+				5F4DF9562E70EEE60098917B /* OATransformLayer.m */,
+				5F4DF9572E70EEE60098917B /* UIStackViewTypeAlias.swift */,
+			);
+			path = OAStackView;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -59,7 +138,16 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5F4DF9392E70EEC10098917B /* UIKitCompatKit.h in Headers */,
+				5F4DF9582E70EEE60098917B /* BridgingHeader.h in Headers */,
+				5F4DF95F2E70EEE60098917B /* OAStackView+Hiding.h in Headers */,
+				5F4DF9692E70EEE60098917B /* OAStackViewDistributionStrategy.h in Headers */,
+				5F4DF9672E70EEE60098917B /* OAStackViewAlignmentStrategyBaseline.h in Headers */,
+				5F4DF9652E70EEE60098917B /* OAStackViewAlignmentStrategy.h in Headers */,
+				5F4DF9612E70EEE60098917B /* OAStackView+Traversal.h in Headers */,
+				5F4DF95D2E70EEE60098917B /* OAStackView+Constraint.h in Headers */,
+				5F4DF9632E70EEE60098917B /* OAStackView.h in Headers */,
+				5F4DF95B2E70EEE60098917B /* _OALayoutGuide.h in Headers */,
+				5F4DF96B2E70EEE60098917B /* OATransformLayer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -120,6 +208,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5F4DF95A2E70EEE60098917B /* .gitkeep in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,6 +219,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5F4DF95C2E70EEE60098917B /* _OALayoutGuide.m in Sources */,
+				5F4DF9642E70EEE60098917B /* OAStackView.m in Sources */,
+				5F4DF9592E70EEE60098917B /* NSLayoutConstraint.swift in Sources */,
+				5F4DF9622E70EEE60098917B /* OAStackView+Traversal.m in Sources */,
+				5F4DF96C2E70EEE60098917B /* OATransformLayer.m in Sources */,
+				5F4DF9602E70EEE60098917B /* OAStackView+Hiding.m in Sources */,
+				5F4DF9662E70EEE60098917B /* OAStackViewAlignmentStrategy.m in Sources */,
+				5F4DF96D2E70EEE60098917B /* UIStackViewTypeAlias.swift in Sources */,
+				5F4DF95E2E70EEE60098917B /* OAStackView+Constraint.m in Sources */,
+				5F4DF9682E70EEE60098917B /* OAStackViewAlignmentStrategyBaseline.m in Sources */,
+				5F4DF96A2E70EEE60098917B /* OAStackViewDistributionStrategy.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
