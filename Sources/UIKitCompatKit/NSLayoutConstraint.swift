@@ -47,6 +47,7 @@ extension UIView {
     var heightAnchor: Anchor { return Anchor(view: self, attribute: .height) }
     var centerXAnchor: Anchor { return Anchor(view: self, attribute: .centerX) }
     var centerYAnchor: Anchor { return Anchor(view: self, attribute: .centerY) }
+    var cookywookywoo: Anchor { return Anchor(view: self, attribute: .centerX) }
 }
 
 // MARK: - NSLayoutConstraint isActive Backport
