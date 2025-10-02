@@ -1,7 +1,7 @@
 import UIKit
 
-@available(iOS, introduced: 6.0, obsoleted: 9.0)
 /// UILayoutGuide for iOS 9>
+@available(iOS, introduced: 6.0, obsoleted: 9.0)
 public class UILayoutGuideShim {
     private weak var owningView: UIView?
     private let proxyView: UIView
