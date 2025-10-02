@@ -29,5 +29,8 @@ public class UILayoutGuideShim {
     public var centerYAnchor: Anchor { proxyView.centerYAnchor }
 }
 
+@available(iOS, introduced: 6.0, obsoleted: 9.0)
+public typealias UILayoutGuide = UILayoutGuideShim
+
 
 
