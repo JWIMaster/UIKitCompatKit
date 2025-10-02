@@ -12,7 +12,7 @@ extension UIScrollView {
             return guide
         }
         let guide = UILayoutGuideShim()
-        guide.attach(to: self)
+        self.addLayoutGuide(guide)
         objc_setAssociatedObject(self, &Keys.contentGuide, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         return guide
     }
@@ -23,7 +23,7 @@ extension UIScrollView {
             return guide
         }
         let guide = UILayoutGuideShim()
-        guide.attach(to: self)
+        self.addLayoutGuide(guide)
         objc_setAssociatedObject(self, &Keys.frameGuide, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         return guide
     }
