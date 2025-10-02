@@ -53,6 +53,7 @@ public extension UIView {
 // MARK: - NSLayoutConstraint isActive Backport
 private let activeConstraints: NSHashTable = NSHashTable<AnyObject>(options: .weakMemory)
 
+@available(iOS, introduced: 2.0, obsoleted: 9.0)
 public extension NSLayoutConstraint {
     var isActive: Bool {
         get {
