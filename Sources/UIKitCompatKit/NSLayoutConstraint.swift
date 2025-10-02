@@ -14,7 +14,7 @@ public class Anchor {
     public func constraint(equalTo other: Anchor,
                            multiplier: CGFloat = 1.0,
                            constant: CGFloat = 0) -> NSLayoutConstraint {
-        NSLayoutConstraint(
+        let constraint = NSLayoutConstraint(
             item: view!,
             attribute: attribute,
             relatedBy: .equal,
@@ -23,10 +23,13 @@ public class Anchor {
             multiplier: multiplier,
             constant: constant
         )
+        constraint.firstAnchor = self
+        constraint.secondAnchor = other
+        return constraint
     }
     
     public func constraint(equalToConstant constant: CGFloat) -> NSLayoutConstraint {
-        NSLayoutConstraint(
+        let constraint = NSLayoutConstraint(
             item: view!,
             attribute: attribute,
             relatedBy: .equal,
@@ -35,6 +38,9 @@ public class Anchor {
             multiplier: 1,
             constant: constant
         )
+        constraint.firstAnchor = self
+        constraint.secondAnchor = nil
+        return constraint
     }
 }
 
@@ -77,10 +83,22 @@ public extension UIView {
 }
 
 // MARK: - NSLayoutConstraint isActive Backport
+private var firstAnchorKey: UInt8 = 0
+private var secondAnchorKey: UInt8 = 0
 private let activeConstraints: NSHashTable = NSHashTable<AnyObject>(options: .weakMemory)
 
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
 public extension NSLayoutConstraint {
+    var firstAnchor: Anchor? {
+        get { objc_getAssociatedObject(self, &firstAnchorKey) as? Anchor }
+        set { objc_setAssociatedObject(self, &firstAnchorKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+    
+    var secondAnchor: Anchor? {
+        get { objc_getAssociatedObject(self, &secondAnchorKey) as? Anchor }
+        set { objc_setAssociatedObject(self, &secondAnchorKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+    
     var isActive: Bool {
         get {
             return activeConstraints.contains(self)
