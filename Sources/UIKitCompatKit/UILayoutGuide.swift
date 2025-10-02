@@ -136,3 +136,12 @@ public extension UIViewController {
         return guide
     }
 }
+
+extension UILayoutGuideShim {
+    @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    public var layoutFrame: CGRect {
+        guard let view = owningView else { return .zero }
+        // Just return the frame inset by layoutMargins as an approximation
+        return view.bounds.inset(by: view.layoutMargins)
+    }
+}
