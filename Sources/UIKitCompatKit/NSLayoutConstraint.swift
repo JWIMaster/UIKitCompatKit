@@ -85,6 +85,7 @@ public extension NSLayoutConstraint {
         for c in constraints { c.isActive = true }
     }
     
+    @available(iOS, introduced: 6.0, obsoleted: 8.0)
     class func deactivate(_ constraints: [NSLayoutConstraint]) {
         for c in constraints { c.isActive = false }
     }
