@@ -29,6 +29,14 @@ public class UILayoutGuideShim {
     public var centerYAnchor: Anchor { proxyView.centerYAnchor }
 }
 
+public extension UIView {
+    /// Mimics `addLayoutGuide(_:)` on iOS < 9 by attaching the UILayoutGuideShim's proxy view
+    @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    func addLayoutGuide(_ guide: UILayoutGuideShim) {
+        guide.attach(to: self)
+    }
+}
+
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
 public typealias UILayoutGuide = UILayoutGuideShim
 
