@@ -1,5 +1,4 @@
 import UIKit
-import ObjectiveC
 
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
 public class UILayoutGuideShim {
@@ -12,17 +11,13 @@ public class UILayoutGuideShim {
         proxyView.isHidden = true
     }
 
-    /// Attach the layout guide to a parent view
     public func attach(to view: UIView) {
         owningView = view
         view.addSubview(proxyView)
-
-        // Default zero-size constraints so the proxy view doesn't interfere
-        proxyView.widthAnchor.constraint(equalToConstant: 0).isActive = true
-        proxyView.heightAnchor.constraint(equalToConstant: 0).isActive = true
+        // No default width/height — size comes entirely from constraints
     }
 
-    // MARK: - Anchors using your Anchor type
+    // MARK: - Anchors (already your Anchor type)
     public var leadingAnchor: Anchor { proxyView.leadingAnchor }
     public var trailingAnchor: Anchor { proxyView.trailingAnchor }
     public var topAnchor: Anchor { proxyView.topAnchor }
