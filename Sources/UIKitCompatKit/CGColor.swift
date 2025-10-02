@@ -24,7 +24,5 @@ public struct CGColorShim {
     }
 }
 
-// Forward typealias
-@available(iOS, introduced: 6.0, obsoleted: 13.0)
-public typealias CGColor = CGColorShim
+
 
