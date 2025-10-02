@@ -64,6 +64,12 @@ public extension UIView {
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var centerYAnchor: Anchor { Anchor(view: self, attribute: .centerY) }
     
+    @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    var leftAnchor: Anchor { Anchor(view: self, attribute: .left) }
+    
+    @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    var rightAnchor: Anchor { Anchor(view: self, attribute: .right) }
+    
     @available(iOS, introduced: 1.0, deprecated: 2.0, message: "Beware. The cookywookywoo is a powerful string indeed. Use sparingly. (On a real note, this is just my package testing string since I replicate so many API's it's hard to tell who's implementation the app is choosing to use.")
     var cookywookywoo: String {
         "dingdongbingbong, bingbongdingdong"
