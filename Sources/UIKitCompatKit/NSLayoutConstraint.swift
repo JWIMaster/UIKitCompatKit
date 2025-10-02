@@ -5,13 +5,15 @@ public class Anchor {
     weak var view: UIView?
     let attribute: NSLayoutConstraint.Attribute
     
-    init(view: UIView, attribute: NSLayoutConstraint.Attribute) {
+    public init(view: UIView, attribute: NSLayoutConstraint.Attribute) {
         self.view = view
         self.attribute = attribute
     }
     
-    func constraint(equalTo other: Anchor, multiplier: CGFloat = 1.0, constant: CGFloat = 0) -> NSLayoutConstraint {
-        return NSLayoutConstraint(
+    public func constraint(equalTo other: Anchor,
+                           multiplier: CGFloat = 1.0,
+                           constant: CGFloat = 0) -> NSLayoutConstraint {
+        NSLayoutConstraint(
             item: view!,
             attribute: attribute,
             relatedBy: .equal,
@@ -22,8 +24,8 @@ public class Anchor {
         )
     }
     
-    func constraint(equalToConstant constant: CGFloat) -> NSLayoutConstraint {
-        return NSLayoutConstraint(
+    public func constraint(equalToConstant constant: CGFloat) -> NSLayoutConstraint {
+        NSLayoutConstraint(
             item: view!,
             attribute: attribute,
             relatedBy: .equal,
@@ -37,15 +39,15 @@ public class Anchor {
 
 // MARK: - UIView extension using safe internal anchors
 public extension UIView {
-    var leadingAnchor: Anchor { return Anchor(view: self, attribute: .leading) }
-    var trailingAnchor: Anchor { return Anchor(view: self, attribute: .trailing) }
-    var topAnchor: Anchor { return Anchor(view: self, attribute: .top) }
-    var bottomAnchor: Anchor { return Anchor(view: self, attribute: .bottom) }
-    var widthAnchor: Anchor { return Anchor(view: self, attribute: .width) }
-    var heightAnchor: Anchor { return Anchor(view: self, attribute: .height) }
-    var centerXAnchor: Anchor { return Anchor(view: self, attribute: .centerX) }
-    var centerYAnchor: Anchor { return Anchor(view: self, attribute: .centerY) }
-    var cookywookywoo: Anchor { return Anchor(view: self, attribute: .centerX) }
+    var leadingAnchor: Anchor { Anchor(view: self, attribute: .leading) }
+    var trailingAnchor: Anchor { Anchor(view: self, attribute: .trailing) }
+    var topAnchor: Anchor { Anchor(view: self, attribute: .top) }
+    var bottomAnchor: Anchor { Anchor(view: self, attribute: .bottom) }
+    var widthAnchor: Anchor { Anchor(view: self, attribute: .width) }
+    var heightAnchor: Anchor { Anchor(view: self, attribute: .height) }
+    var centerXAnchor: Anchor { Anchor(view: self, attribute: .centerX) }
+    var centerYAnchor: Anchor { Anchor(view: self, attribute: .centerY) }
+    var cookywookywoo: Anchor { Anchor(view: self, attribute: .centerX) }
 }
 
 // MARK: - NSLayoutConstraint isActive Backport
@@ -73,14 +75,14 @@ public extension NSLayoutConstraint {
         }
     }
     
-    // MARK: - Activate / Deactivate multiple constraints
-    static func activate(constraints: [NSLayoutConstraint]) {
+    // MARK: - Correct signatures (match UIKit)
+    @available(iOS, introduced: 2.0, obsoleted: 9.0)
+    class func activate(_ constraints: [NSLayoutConstraint]) {
         for c in constraints { c.isActive = true }
     }
     
-    static func deactivate(constraints: [NSLayoutConstraint]) {
+    @available(iOS, introduced: 2.0, obsoleted: 9.0)
+    class func deactivate(_ constraints: [NSLayoutConstraint]) {
         for c in constraints { c.isActive = false }
     }
 }
-
-
