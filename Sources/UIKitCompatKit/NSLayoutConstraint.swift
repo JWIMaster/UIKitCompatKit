@@ -39,25 +39,31 @@ public class Anchor {
 }
 
 // MARK: - UIView extension using safe internal anchors
-@available(iOS, introduced: 6.0, obsoleted: 9.0)
 public extension UIView {
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var leadingAnchor: Anchor { Anchor(view: self, attribute: .leading) }
+    
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var trailingAnchor: Anchor { Anchor(view: self, attribute: .trailing) }
+    
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var topAnchor: Anchor { Anchor(view: self, attribute: .top) }
+    
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var bottomAnchor: Anchor { Anchor(view: self, attribute: .bottom) }
+    
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var widthAnchor: Anchor { Anchor(view: self, attribute: .width) }
+    
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var heightAnchor: Anchor { Anchor(view: self, attribute: .height) }
+    
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var centerXAnchor: Anchor { Anchor(view: self, attribute: .centerX) }
+    
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var centerYAnchor: Anchor { Anchor(view: self, attribute: .centerY) }
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    
     var cookywookywoo: String {
         "dingdongbingbong, bingbongdingdong"
     }
