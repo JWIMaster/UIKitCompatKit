@@ -11,5 +11,5 @@ import UIKit
 import OAStackViewWrapper
 
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
-typealias UIStackView = OAStackView
+public typealias UIStackView = OAStackView
 
