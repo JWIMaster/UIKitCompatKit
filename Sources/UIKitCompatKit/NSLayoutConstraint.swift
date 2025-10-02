@@ -89,16 +89,19 @@ private let activeConstraints: NSHashTable = NSHashTable<AnyObject>(options: .we
 
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
 public extension NSLayoutConstraint {
+    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var firstAnchor: Anchor? {
         get { objc_getAssociatedObject(self, &firstAnchorKey) as? Anchor }
         set { objc_setAssociatedObject(self, &firstAnchorKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
     
+    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var secondAnchor: Anchor? {
         get { objc_getAssociatedObject(self, &secondAnchorKey) as? Anchor }
         set { objc_setAssociatedObject(self, &secondAnchorKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
     
+    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var isActive: Bool {
         get {
             return activeConstraints.contains(self)
