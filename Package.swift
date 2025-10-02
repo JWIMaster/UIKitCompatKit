@@ -23,13 +23,13 @@ let package = Package(
         // Swift target
         .target(
             name: "UIKitCompatKit",
-            dependencies: ["OAStackViewWrapper"],
+            dependencies: ["OAStackView"],
             path: "Sources/UIKitCompatKit"
         ),
         
         // Objective-C target for OAStackView
         .target(
-            name: "OAStackViewWrapper",
+            name: "OAStackView",
             path: "Sources/OAStackView",
             publicHeadersPath: "."
         ),
