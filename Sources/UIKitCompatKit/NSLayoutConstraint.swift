@@ -1,6 +1,7 @@
 import UIKit
 
 // MARK: - Internal Anchor Backport (safe names)
+@available(iOS, introduced: 6.0, obsoleted: 9.0)
 public class Anchor {
     weak var view: UIView?
     let attribute: NSLayoutConstraint.Attribute
@@ -38,6 +39,7 @@ public class Anchor {
 }
 
 // MARK: - UIView extension using safe internal anchors
+@available(iOS, introduced: 6.0, obsoleted: 9.0)
 public extension UIView {
     var leadingAnchor: Anchor { Anchor(view: self, attribute: .leading) }
     var trailingAnchor: Anchor { Anchor(view: self, attribute: .trailing) }
@@ -53,7 +55,7 @@ public extension UIView {
 // MARK: - NSLayoutConstraint isActive Backport
 private let activeConstraints: NSHashTable = NSHashTable<AnyObject>(options: .weakMemory)
 
-@available(iOS, introduced: 2.0, obsoleted: 9.0)
+@available(iOS, introduced: 6.0, obsoleted: 9.0)
 public extension NSLayoutConstraint {
     var isActive: Bool {
         get {
@@ -77,12 +79,10 @@ public extension NSLayoutConstraint {
     }
     
     // MARK: - Correct signatures (match UIKit)
-    @available(iOS, introduced: 2.0, obsoleted: 9.0)
     class func activate(_ constraints: [NSLayoutConstraint]) {
         for c in constraints { c.isActive = true }
     }
     
-    @available(iOS, introduced: 2.0, obsoleted: 9.0)
     class func deactivate(_ constraints: [NSLayoutConstraint]) {
         for c in constraints { c.isActive = false }
     }
