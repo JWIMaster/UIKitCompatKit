@@ -1,4 +1,5 @@
 import UIKit
+import ObjectiveC
 
 // MARK: - UILayoutGuide Shim
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
@@ -17,30 +18,36 @@ public class UILayoutGuideShim {
         view.addSubview(proxyView)
     }
 
-    // Anchors (all use Anchor shim)
-    public var leadingAnchor: Anchor { proxyView.leadingAnchor }
-    public var trailingAnchor: Anchor { proxyView.trailingAnchor }
-    public var leftAnchor: Anchor { proxyView.leftAnchor }
-    public var rightAnchor: Anchor { proxyView.rightAnchor }
-    public var topAnchor: Anchor { proxyView.topAnchor }
-    public var bottomAnchor: Anchor { proxyView.bottomAnchor }
-    public var widthAnchor: Anchor { proxyView.widthAnchor }
-    public var heightAnchor: Anchor { proxyView.heightAnchor }
-    public var centerXAnchor: Anchor { proxyView.centerXAnchor }
-    public var centerYAnchor: Anchor { proxyView.centerYAnchor }
+    // Anchors using your Anchor backport
+    public var leadingAnchor: Anchor { Anchor(view: proxyView, attribute: .leading) }
+    public var trailingAnchor: Anchor { Anchor(view: proxyView, attribute: .trailing) }
+    public var leftAnchor: Anchor { Anchor(view: proxyView, attribute: .left) }
+    public var rightAnchor: Anchor { Anchor(view: proxyView, attribute: .right) }
+    public var topAnchor: Anchor { Anchor(view: proxyView, attribute: .top) }
+    public var bottomAnchor: Anchor { Anchor(view: proxyView, attribute: .bottom) }
+    public var widthAnchor: Anchor { Anchor(view: proxyView, attribute: .width) }
+    public var heightAnchor: Anchor { Anchor(view: proxyView, attribute: .height) }
+    public var centerXAnchor: Anchor { Anchor(view: proxyView, attribute: .centerX) }
+    public var centerYAnchor: Anchor { Anchor(view: proxyView, attribute: .centerY) }
+
+    // Public layoutFrame for reading
+    public var layoutFrame: CGRect {
+        proxyView.frame
+    }
 }
 
-@available(iOS, introduced: 6.0, obsoleted: 9.0)
-public typealias UILayoutGuide = UILayoutGuideShim
-
-// MARK: - UIView layout guide storage
+// MARK: - UIView Layout Guide Storage
 private var layoutGuidesKey: UInt8 = 0
 private var layoutMarginsKey: UInt8 = 0
 private var layoutMarginsGuideKey: UInt8 = 0
 private var safeAreaGuideKey: UInt8 = 0
 
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
+public typealias UILayoutGuide = UILayoutGuideShim
+
+@available(iOS, introduced: 6.0, obsoleted: 9.0)
 public extension UIView {
+
     func addLayoutGuide(_ guide: UILayoutGuideShim) {
         guide.attach(to: self)
         var guides = objc_getAssociatedObject(self, &layoutGuidesKey) as? [UILayoutGuide] ?? []
@@ -62,10 +69,12 @@ public extension UIView {
         if let guide = objc_getAssociatedObject(self, &layoutMarginsGuideKey) as? UILayoutGuide { return guide }
         let guide = UILayoutGuide()
         self.addLayoutGuide(guide)
-        guide.topAnchor.constraint(equalTo: Anchor(view: self, attribute: .top), constant: layoutMargins.top).isActive = true
-        guide.bottomAnchor.constraint(equalTo: Anchor(view: self, attribute: .bottom), constant: -layoutMargins.bottom).isActive = true
-        guide.leadingAnchor.constraint(equalTo: Anchor(view: self, attribute: .leading), constant: layoutMargins.left).isActive = true
-        guide.trailingAnchor.constraint(equalTo: Anchor(view: self, attribute: .trailing), constant: -layoutMargins.right).isActive = true
+
+        guide.topAnchor.constraint(equalTo: self.topAnchor, constant: layoutMargins.top).isActive = true
+        guide.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -layoutMargins.bottom).isActive = true
+        guide.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: layoutMargins.left).isActive = true
+        guide.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -layoutMargins.right).isActive = true
+
         objc_setAssociatedObject(self, &layoutMarginsGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         return guide
     }
@@ -75,49 +84,50 @@ public extension UIView {
         let guide = UILayoutGuide()
         self.addLayoutGuide(guide)
 
+        var topOffset: CGFloat = 0
+        var bottomOffset: CGFloat = 0
+
         if let vc = sequence(first: self.next, next: { $0?.next }).compactMap({ $0 as? UIViewController }).first {
-            guide.topAnchor.constraint(equalTo: vc.topLayoutGuide.bottomAnchor).isActive = true
-            guide.bottomAnchor.constraint(equalTo: vc.bottomLayoutGuide.topAnchor).isActive = true
-        } else {
-            guide.topAnchor.constraint(equalTo: Anchor(view: self, attribute: .top)).isActive = true
-            guide.bottomAnchor.constraint(equalTo: Anchor(view: self, attribute: .bottom)).isActive = true
+            topOffset = vc.topLayoutGuide.length
+            bottomOffset = vc.bottomLayoutGuide.length
         }
 
-        guide.leadingAnchor.constraint(equalTo: self.layoutMarginsGuide.leadingAnchor).isActive = true
-        guide.trailingAnchor.constraint(equalTo: self.layoutMarginsGuide.trailingAnchor).isActive = true
+        guide.topAnchor.constraint(equalTo: self.topAnchor, constant: topOffset + layoutMargins.top).isActive = true
+        guide.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -(bottomOffset + layoutMargins.bottom)).isActive = true
+        guide.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: layoutMargins.left).isActive = true
+        guide.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -layoutMargins.right).isActive = true
 
         objc_setAssociatedObject(self, &safeAreaGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         return guide
     }
+
+    // Method to layout all guides manually
+    func layoutAllGuides() {
+        for guide in layoutGuides {
+            guide.proxyView.superview?.layoutIfNeeded()
+        }
+    }
 }
 
-// MARK: - Pre-iOS 9 UILayoutSupport Shim Protocol
-@available(iOS, introduced: 6.0, obsoleted: 9.0)
-public protocol UILayoutSupportShimProtocol: AnyObject {
-    var length: CGFloat { get }
-    var topAnchor: Anchor { get }
-    var bottomAnchor: Anchor { get }
-}
-
-
-
-
-// MARK: - UIViewController layout support shim
+// MARK: - UIViewController Layout Support Shim
 private var topGuideKey: UInt8 = 0
 private var bottomGuideKey: UInt8 = 0
 
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
-public class UILayoutSupportShim: NSObject, UILayoutSupportShimProtocol {
+public class UILayoutSupportShim: NSObject {
     public let length: CGFloat
-    weak var associatedView: UIView?
+    fileprivate let proxyView: UIView
 
     public init(length: CGFloat, view: UIView? = nil) {
         self.length = length
-        self.associatedView = view
+        proxyView = UIView()
+        proxyView.translatesAutoresizingMaskIntoConstraints = false
+        proxyView.isHidden = true
+        view?.addSubview(proxyView)
     }
 
-    public var topAnchor: Anchor { Anchor(view: associatedView ?? UIView(), attribute: .top) }
-    public var bottomAnchor: Anchor { Anchor(view: associatedView ?? UIView(), attribute: .bottom) }
+    public var topAnchor: Anchor { Anchor(view: proxyView, attribute: .top) }
+    public var bottomAnchor: Anchor { Anchor(view: proxyView, attribute: .bottom) }
 }
 
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
@@ -134,14 +144,5 @@ public extension UIViewController {
         let guide = UILayoutSupportShim(length: 0, view: self.view)
         objc_setAssociatedObject(self, &bottomGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         return guide
-    }
-}
-
-extension UILayoutGuideShim {
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
-    public var layoutFrame: CGRect {
-        guard let view = owningView else { return .zero }
-        // Just return the frame inset by layoutMargins as an approximation
-        return view.bounds.inset(by: view.layoutMargins)
     }
 }
