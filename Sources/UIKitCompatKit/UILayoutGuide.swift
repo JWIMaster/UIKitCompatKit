@@ -100,35 +100,31 @@ public extension UIView {
     }
 
     // MARK: - safeAreaLayoutGuide
-    //@available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @available(iOS, introduced: 6.0, obsoleted: 11.0)
     var safeAreaLayoutGuide: UILayoutGuide {
-        if #available(iOS 11, *) {
-            return self.safeAreaLayoutGuide
-        } else {
-            if let guide = objc_getAssociatedObject(self, &safeAreaGuideKey) as? UILayoutGuide { return guide }
+        if let guide = objc_getAssociatedObject(self, &safeAreaGuideKey) as? UILayoutGuide { return guide }
 
-            let guide = UILayoutGuide()
-            guide.attach(to: self)
+        let guide = UILayoutGuide()
+        guide.attach(to: self)
 
-            var topInset: CGFloat = 0
-            var bottomInset: CGFloat = 0
-            if let vc = sequence(first: self.next, next: { $0?.next }).compactMap({ $0 as? UIViewController }).first {
-                topInset += vc.topLayoutGuide.length
-                bottomInset += vc.bottomLayoutGuide.length
-            }
-
-            NSLayoutConstraint.activate([
-                guide.topAnchor.constraint(equalTo: topAnchor, constant: topInset),
-                guide.leadingAnchor.constraint(equalTo: leadingAnchor),
-                guide.trailingAnchor.constraint(equalTo: trailingAnchor),
-                guide.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -bottomInset)
-            ])
-
-            addLayoutGuide(guide)
-            objc_setAssociatedObject(self, &safeAreaGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-            
-            return guide
+        var topInset: CGFloat = 0
+        var bottomInset: CGFloat = 0
+        if let vc = sequence(first: self.next, next: { $0?.next }).compactMap({ $0 as? UIViewController }).first {
+            topInset += vc.topLayoutGuide.length
+            bottomInset += vc.bottomLayoutGuide.length
         }
+
+        NSLayoutConstraint.activate([
+            guide.topAnchor.constraint(equalTo: topAnchor, constant: topInset),
+            guide.leadingAnchor.constraint(equalTo: leadingAnchor),
+            guide.trailingAnchor.constraint(equalTo: trailingAnchor),
+            guide.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -bottomInset)
+        ])
+
+        addLayoutGuide(guide)
+        objc_setAssociatedObject(self, &safeAreaGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        
+        return guide
     }
 }
 
