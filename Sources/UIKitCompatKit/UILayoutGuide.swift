@@ -61,10 +61,11 @@ private var layoutGuidesKey: UInt8 = 0
 private var layoutMarginsGuideKey: UInt8 = 0
 private var safeAreaGuideKey: UInt8 = 0
 
-@available(iOS, introduced: 6.0, obsoleted: 9.0)
+
 public extension UIView {
 
     // MARK: - addLayoutGuide backport
+    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     func addLayoutGuide(_ guide: UILayoutGuideShim) {
         guide.attach(to: self)
 
