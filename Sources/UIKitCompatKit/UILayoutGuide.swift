@@ -16,50 +16,40 @@ public extension UIView {
     }
 }
 
-// MARK: - UILayoutGuideShim
+// MARK: - UILayoutGuideShim (proxy-based)
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
 public class UILayoutGuideShim {
     fileprivate weak var owningView: UIView?
-    fileprivate var topConstant: CGFloat = 0
-    fileprivate var bottomConstant: CGFloat = 0
-    fileprivate var leadingConstant: CGFloat = 0
-    fileprivate var trailingConstant: CGFloat = 0
+    fileprivate let proxyView: UIView
 
-    public init() {}
-
-    fileprivate func attach(to view: UIView,
-                            top: CGFloat = 0,
-                            bottom: CGFloat = 0,
-                            leading: CGFloat = 0,
-                            trailing: CGFloat = 0) {
-        owningView = view
-        topConstant = top
-        bottomConstant = bottom
-        leadingConstant = leading
-        trailingConstant = trailing
+    public init() {
+        proxyView = UIView()
+        proxyView.translatesAutoresizingMaskIntoConstraints = false
+        proxyView.isHidden = true
     }
 
-    // Dynamic anchors using your Anchor backport
-    public var topAnchor: Anchor { Anchor(view: owningView!, attribute: .top) }
-    public var bottomAnchor: Anchor { Anchor(view: owningView!, attribute: .bottom) }
-    public var leadingAnchor: Anchor { Anchor(view: owningView!, attribute: .leading) }
-    public var trailingAnchor: Anchor { Anchor(view: owningView!, attribute: .trailing) }
-    public var leftAnchor: Anchor { Anchor(view: owningView!, attribute: .left) }
-    public var rightAnchor: Anchor { Anchor(view: owningView!, attribute: .right) }
-    public var widthAnchor: Anchor { Anchor(view: owningView!, attribute: .width) }
-    public var heightAnchor: Anchor { Anchor(view: owningView!, attribute: .height) }
-    public var centerXAnchor: Anchor { Anchor(view: owningView!, attribute: .centerX) }
-    public var centerYAnchor: Anchor { Anchor(view: owningView!, attribute: .centerY) }
+    fileprivate func attach(to view: UIView) {
+        owningView = view
+        view.addSubview(proxyView)
+    }
 
-    // Computed frame (optional, for compatibility)
+    // MARK: - Anchors forwarding to proxyView
+    public var topAnchor: Anchor { Anchor(view: proxyView, attribute: .top) }
+    public var bottomAnchor: Anchor { Anchor(view: proxyView, attribute: .bottom) }
+    public var leadingAnchor: Anchor { Anchor(view: proxyView, attribute: .leading) }
+    public var trailingAnchor: Anchor { Anchor(view: proxyView, attribute: .trailing) }
+    public var leftAnchor: Anchor { Anchor(view: proxyView, attribute: .left) }
+    public var rightAnchor: Anchor { Anchor(view: proxyView, attribute: .right) }
+    public var widthAnchor: Anchor { Anchor(view: proxyView, attribute: .width) }
+    public var heightAnchor: Anchor { Anchor(view: proxyView, attribute: .height) }
+    public var centerXAnchor: Anchor { Anchor(view: proxyView, attribute: .centerX) }
+    public var centerYAnchor: Anchor { Anchor(view: proxyView, attribute: .centerY) }
+
+    // MARK: - layoutFrame returns actual frame
     public var layoutFrame: CGRect {
         guard let view = owningView else { return .zero }
-        return CGRect(
-            x: view.bounds.minX + leadingConstant,
-            y: view.bounds.minY + topConstant,
-            width: view.bounds.width - leadingConstant - trailingConstant,
-            height: view.bounds.height - topConstant - bottomConstant
-        )
+        view.layoutIfNeeded()
+        return proxyView.frame
     }
 }
 
@@ -93,11 +83,15 @@ public extension UIView {
         if let guide = objc_getAssociatedObject(self, &layoutMarginsGuideKey) as? UILayoutGuide { return guide }
 
         let guide = UILayoutGuide()
-        guide.attach(to: self,
-                     top: layoutMargins.top,
-                     bottom: layoutMargins.bottom,
-                     leading: layoutMargins.left,
-                     trailing: layoutMargins.right)
+        guide.attach(to: self)
+
+        // Pin proxyView to layoutMargins
+        NSLayoutConstraint.activate([
+            guide.topAnchor.constraint(equalTo: topAnchor, constant: layoutMargins.top),
+            guide.leadingAnchor.constraint(equalTo: leadingAnchor, constant: layoutMargins.left),
+            guide.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -layoutMargins.right),
+            guide.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -layoutMargins.bottom)
+        ])
 
         addLayoutGuide(guide)
         objc_setAssociatedObject(self, &layoutMarginsGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
@@ -109,19 +103,21 @@ public extension UIView {
         if let guide = objc_getAssociatedObject(self, &safeAreaGuideKey) as? UILayoutGuide { return guide }
 
         let guide = UILayoutGuide()
+        guide.attach(to: self)
+
         var topInset: CGFloat = 0
         var bottomInset: CGFloat = 0
-
         if let vc = sequence(first: self.next, next: { $0?.next }).compactMap({ $0 as? UIViewController }).first {
             topInset += vc.topLayoutGuide.length
             bottomInset += vc.bottomLayoutGuide.length
         }
 
-        guide.attach(to: self,
-                     top: topInset,
-                     bottom: bottomInset,
-                     leading: 0,
-                     trailing: 0)
+        NSLayoutConstraint.activate([
+            guide.topAnchor.constraint(equalTo: topAnchor, constant: topInset),
+            guide.leadingAnchor.constraint(equalTo: leadingAnchor),
+            guide.trailingAnchor.constraint(equalTo: trailingAnchor),
+            guide.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -bottomInset)
+        ])
 
         addLayoutGuide(guide)
         objc_setAssociatedObject(self, &safeAreaGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
