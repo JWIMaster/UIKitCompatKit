@@ -30,6 +30,7 @@ public class UILayoutGuideShim {
 
     fileprivate func attach(to view: UIView) {
         owningView = view
+        proxyView.frame = view.bounds
         view.addSubview(proxyView)
     }
 
