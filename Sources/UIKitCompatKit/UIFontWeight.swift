@@ -1,3 +1,7 @@
+#if APP_12
+
+#else
+
 import UIKit
 
 // MARK: - UIFont.Weight Shim for iOS <8.2
@@ -44,3 +48,4 @@ extension UIFont {
         }
     }
 }
+#endif

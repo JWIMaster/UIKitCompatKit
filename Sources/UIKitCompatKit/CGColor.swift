@@ -1,7 +1,6 @@
 import UIKit
 import CoreGraphics
 
-
 @available(iOS, introduced: 6.0, obsoleted: 13.0)
 public struct CGColorShim {
     public let cgColor: CoreGraphics.CGColor
