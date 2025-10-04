@@ -121,6 +121,8 @@ public extension UIView {
 
         addLayoutGuide(guide)
         objc_setAssociatedObject(self, &safeAreaGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        
+        print("using shim")
         return guide
     }
 }
