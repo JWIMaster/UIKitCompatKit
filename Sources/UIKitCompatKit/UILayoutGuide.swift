@@ -139,7 +139,8 @@ public class UILayoutSupportShim: NSObject {
 public extension UIViewController {
     var topLayoutGuide: UILayoutSupportShim {
         if let guide = objc_getAssociatedObject(self, &topGuideKey) as? UILayoutSupportShim { return guide }
-        let guide = UILayoutSupportShim(length: 20) // default status bar height
+        let statusBarHeight: CGFloat = UIApplication.shared.isStatusBarHidden ? 0 : 20
+        let guide = UILayoutSupportShim(length: statusBarHeight) // default status bar height
         objc_setAssociatedObject(self, &topGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         return guide
     }
