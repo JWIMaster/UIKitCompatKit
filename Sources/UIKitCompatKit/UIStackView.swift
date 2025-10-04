@@ -11,7 +11,10 @@ import UIKit
 import OAStackView
 
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
-public typealias UIStackView = OAStackView
+public class UIStackView: OAStackView {
+    
+}
+//public typealias UIStackView = OAStackView
 
 
 
