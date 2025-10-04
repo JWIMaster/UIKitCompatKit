@@ -17,6 +17,7 @@ private class ClosureSleeve {
     @objc func invoke() { closure() }
 }
 
+@available(iOS, introduced: 6.0, obsoleted: 14.0)
 extension UIButton {
     func addAction(for controlEvents: UIControl.Event, _ closure: @escaping () -> Void) {
         let sleeve = ClosureSleeve(closure)
