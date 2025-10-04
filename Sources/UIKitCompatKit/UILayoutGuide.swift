@@ -128,6 +128,15 @@ public extension UIView {
     }
 }
 
+@available(iOS, introduced: 6.0, obsoleted: 11.0)
+extension UILayoutGuide: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        let frameDesc = "\(proxyView.frame)"
+        let owning = owningView.map { "\($0)" } ?? "nil"
+        return "<UILayoutGuideShim: \(Unmanaged.passUnretained(self).toOpaque()) layoutFrame = \(frameDesc), owningView = \(owning)>"
+    }
+}
+
 // MARK: - UIViewController layout support shim
 private var topGuideKey: UInt8 = 0
 private var bottomGuideKey: UInt8 = 0
