@@ -39,7 +39,7 @@ public class UILayoutGuideShim {
         trailingConstant = trailing
     }
 
-    // Dynamic anchors
+    // Dynamic anchors using your Anchor backport
     public var topAnchor: Anchor { Anchor(view: owningView!, attribute: .top) }
     public var bottomAnchor: Anchor { Anchor(view: owningView!, attribute: .bottom) }
     public var leadingAnchor: Anchor { Anchor(view: owningView!, attribute: .leading) }
@@ -51,7 +51,7 @@ public class UILayoutGuideShim {
     public var centerXAnchor: Anchor { Anchor(view: owningView!, attribute: .centerX) }
     public var centerYAnchor: Anchor { Anchor(view: owningView!, attribute: .centerY) }
 
-    // Computed layoutFrame (for compatibility)
+    // Computed frame (optional, for compatibility)
     public var layoutFrame: CGRect {
         guard let view = owningView else { return .zero }
         return CGRect(
@@ -66,26 +66,45 @@ public class UILayoutGuideShim {
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
 public typealias UILayoutGuide = UILayoutGuideShim
 
-// MARK: - UIView layout guides
+// MARK: - UIView layout guides storage
+private var layoutGuidesKey: UInt8 = 0
 private var layoutMarginsGuideKey: UInt8 = 0
 private var safeAreaGuideKey: UInt8 = 0
 
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
 public extension UIView {
+
+    // MARK: - addLayoutGuide backport
+    func addLayoutGuide(_ guide: UILayoutGuideShim) {
+        guide.attach(to: self)
+
+        var guides = objc_getAssociatedObject(self, &layoutGuidesKey) as? [UILayoutGuideShim] ?? []
+        guides.append(guide)
+        objc_setAssociatedObject(self, &layoutGuidesKey, guides, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    }
+
+    var layoutGuides: [UILayoutGuideShim] {
+        get { objc_getAssociatedObject(self, &layoutGuidesKey) as? [UILayoutGuideShim] ?? [] }
+        set { objc_setAssociatedObject(self, &layoutGuidesKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+
+    // MARK: - layoutMarginsGuide
     var layoutMarginsGuide: UILayoutGuide {
         if let guide = objc_getAssociatedObject(self, &layoutMarginsGuideKey) as? UILayoutGuide { return guide }
+
         let guide = UILayoutGuide()
-        guide.attach(
-            to: self,
-            top: layoutMargins.top,
-            bottom: layoutMargins.bottom,
-            leading: layoutMargins.left,
-            trailing: layoutMargins.right
-        )
+        guide.attach(to: self,
+                     top: layoutMargins.top,
+                     bottom: layoutMargins.bottom,
+                     leading: layoutMargins.left,
+                     trailing: layoutMargins.right)
+
+        addLayoutGuide(guide)
         objc_setAssociatedObject(self, &layoutMarginsGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         return guide
     }
 
+    // MARK: - safeAreaLayoutGuide
     var safeAreaLayoutGuide: UILayoutGuide {
         if let guide = objc_getAssociatedObject(self, &safeAreaGuideKey) as? UILayoutGuide { return guide }
 
@@ -98,12 +117,13 @@ public extension UIView {
             bottomInset += vc.bottomLayoutGuide.length
         }
 
-        // Attach guide to view, top/bottom include safe area offsets, leading/trailing = 0
         guide.attach(to: self,
                      top: topInset,
                      bottom: bottomInset,
                      leading: 0,
                      trailing: 0)
+
+        addLayoutGuide(guide)
         objc_setAssociatedObject(self, &safeAreaGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         return guide
     }
