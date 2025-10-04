@@ -99,6 +99,7 @@ public extension UIView {
     }
 
     // MARK: - safeAreaLayoutGuide
+    //@available(iOS, introduced: 6.0, obsoleted: 9.0)
     var safeAreaLayoutGuide: UILayoutGuide {
         if let guide = objc_getAssociatedObject(self, &safeAreaGuideKey) as? UILayoutGuide { return guide }
 
@@ -122,7 +123,6 @@ public extension UIView {
         addLayoutGuide(guide)
         objc_setAssociatedObject(self, &safeAreaGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         
-        print("using shim")
         return guide
     }
 }
