@@ -33,6 +33,11 @@ let package = Package(
             path: "Sources/OAStackView",
             publicHeadersPath: "."
         ),
+        .target(
+            name: "UIStackView",
+            dependencies: ["OAStackView"],
+            path: "Sources/UIStackView"
+        ),
         
             .testTarget(
                 name: "UIKitCompatKitTests",
