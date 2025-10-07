@@ -103,7 +103,7 @@ public class UIVisualEffectView: UIView {
         let scaledSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
         UIGraphicsBeginImageContextWithOptions(scaledSize, false, 0)
         let ctx = UIGraphicsGetCurrentContext()!
-        ctx.scaleBy(x: scale, y: scale)
+        //ctx.scaleBy(x: scale, y: scale)
         ctx.translateBy(x: -frame.origin.x, y: -frame.origin.y)
         superview.layer.render(in: ctx)
         guard let snapshot = UIGraphicsGetImageFromCurrentImageContext() else {
