@@ -14,25 +14,31 @@ public class UIBlurEffect {
     public let vibrancy: CGFloat
     public let style: Style?
 
-    public init(style: Style) {
+    public let chosenCaptureScale: CGFloat
+    
+    public init(style: Style, chosenCaptureScale: CGFloat = 0) {
         self.style = style
         switch style {
         case .light:
             self.radius = 8
             self.vibrancy = 1.25
+            self.chosenCaptureScale = chosenCaptureScale
         case .regular:
             self.radius = 50
             self.vibrancy = 1.7
+            self.chosenCaptureScale = chosenCaptureScale
         case .dark:
             self.radius = 25
             self.vibrancy = 1.05
+            self.chosenCaptureScale = chosenCaptureScale
         }
     }
 
-    public init(blurRadius: CGFloat, vibrancy: CGFloat = 1.0) {
+    public init(blurRadius: CGFloat, vibrancy: CGFloat = 1.0, chosenCaptureScale: CGFloat = 0) {
         self.style = nil
         self.radius = blurRadius
         self.vibrancy = vibrancy
+        self.chosenCaptureScale = chosenCaptureScale
     }
 }
 
@@ -97,13 +103,13 @@ public class UIVisualEffectView: UIView {
     }
 
     @objc private func updateBlur() {
-        let blurRadius = effect!.radius*captureScale
-        print(blurRadius)
         guard let superview = superview else { return }
         isHidden = true
 
         // Downscale for performance
         let scale: CGFloat = captureScale
+        let blurRadius = effect!.radius*scale
+        print(blurRadius)
         let scaledSize = CGSize(width: bounds.width * captureScale, height: bounds.height * captureScale)
         UIGraphicsBeginImageContextWithOptions(scaledSize, false, 0)
         let ctx = UIGraphicsGetCurrentContext()!
