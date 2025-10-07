@@ -146,7 +146,7 @@ public class UIVisualEffectView: UIView {
         saturation.useNextFrameForImageCapture()
         picture.processImage()
 
-        overlay.image = saturation.imageFromCurrentFramebuffer()¡
+        overlay.image = saturation.imageFromCurrentFramebuffer()
 
         picture.removeAllTargets()
         blur.removeAllTargets()
