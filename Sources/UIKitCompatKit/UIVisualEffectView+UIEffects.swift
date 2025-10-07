@@ -50,13 +50,13 @@ public class UIVisualEffectView: UIView {
     private var captureScale: CGFloat {
         switch device {
         case .a4:
-            return 0.2
+            return 0.1
         case .a5:
-            return 0.3
+            return 0.2
         case .a6:
-            return 0.4
+            return 0.3
         case .a7_a8:
-            return 0.7
+            return 0.6
         case .a9Plus:
             return 1
         case .unknown:
