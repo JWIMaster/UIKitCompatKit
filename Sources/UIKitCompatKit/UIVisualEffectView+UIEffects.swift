@@ -21,7 +21,7 @@ public class UIBlurEffect {
             self.radius = 8
             self.vibrancy = 1.25
         case .regular:
-            self.radius = 40
+            self.radius = 50
             self.vibrancy = 1.7
         case .dark:
             self.radius = 25
