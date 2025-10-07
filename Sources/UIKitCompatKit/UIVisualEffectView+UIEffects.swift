@@ -40,7 +40,7 @@ public class UIBlurEffect {
 @available(iOS, introduced: 6.0, obsoleted: 8.0)
 public class UIVisualEffectView: UIView {
     public let contentView = UIView()
-    private let effect: UIBlurEffect
+    private let effect: UIBlurEffect?
     private let overlay = UIImageView()
     private var displayLink: CADisplayLink?
     private var DeviceInfoClass = DeviceInfo()
@@ -63,6 +63,10 @@ public class UIVisualEffectView: UIView {
         case .unknown:
             return 0.3
         }
+    }
+    
+    public init() {
+        super.init(frame: .zero)
     }
 
     public init(effect: UIBlurEffect) {
