@@ -97,7 +97,7 @@ public class UIVisualEffectView: UIView {
     }
 
     @objc private func updateBlur() {
-        let blurRadius = effect!.radius*captureScale*captureScale
+        let blurRadius = effect!.radius*captureScale
         print(blurRadius)
         guard let superview = superview else { return }
         isHidden = true
