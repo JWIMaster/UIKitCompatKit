@@ -107,7 +107,13 @@ public class UIVisualEffectView: UIView {
         isHidden = true
 
         // Downscale for performance
-        let scale: CGFloat = captureScale
+        let scale: CGFloat = {
+            if effect!.chosenCaptureScale == 0 {
+                return captureScale
+            } else {
+                return effect!.chosenCaptureScale
+            }
+        }()
         let blurRadius = effect!.radius*scale
         print(blurRadius)
         let scaledSize = CGSize(width: bounds.width * captureScale, height: bounds.height * captureScale)
