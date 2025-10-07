@@ -117,7 +117,7 @@ public class UIVisualEffectView: UIView {
         // GPUImage blur + vibrancy
         let picture = GPUImagePicture(image: snapshot)!
         let blur = GPUImageGaussianBlurFilter()
-        blur.blurRadiusInPixels = CGFloat(Float(effect!.radius))
+        blur.blurRadiusInPixels = CGFloat(Float(effect!.radius)) * (1 / scale)
         let saturation = GPUImageSaturationFilter()
         saturation.saturation = effect!.vibrancy
 
