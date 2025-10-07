@@ -19,13 +19,13 @@ public class UIBlurEffect {
         switch style {
         case .light:
             self.radius = 8
-            self.vibrancy = 1.25
+            self.vibrancy = 1.0
         case .regular:
             self.radius = 15
-            self.vibrancy = 1.15
+            self.vibrancy = 1.0
         case .dark:
             self.radius = 25
-            self.vibrancy = 1.05
+            self.vibrancy = 1.0
         }
     }
 
@@ -122,19 +122,19 @@ public class UIVisualEffectView: UIView {
         let picture = GPUImagePicture(image: snapshot)!
         let blur = GPUImageGaussianBlurFilter()
         blur.blurRadiusInPixels = CGFloat(Float(blurRadius))
-        //let saturation = GPUImageSaturationFilter()
-        //saturation.saturation = effect!.vibrancy
+        let saturation = GPUImageSaturationFilter()
+        saturation.saturation = effect!.vibrancy
 
         picture.addTarget(blur)
-        //blur.addTarget(saturation)
-        //saturation.useNextFrameForImageCapture()
+        blur.addTarget(saturation)
+        saturation.useNextFrameForImageCapture()
         picture.processImage()
 
-        //overlay.image = saturation.imageFromCurrentFramebuffer()
+        overlay.image = saturation.imageFromCurrentFramebuffer()
 
         picture.removeAllTargets()
         blur.removeAllTargets()
-        //saturation.removeAllTargets()
+        saturation.removeAllTargets()
     }
 
     deinit { displayLink?.invalidate() }
