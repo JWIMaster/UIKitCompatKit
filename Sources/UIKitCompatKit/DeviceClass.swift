@@ -6,6 +6,7 @@ public enum ChipsetClass: String {
     case a6 = "A6"
     case a7_a8 = "A7–A8"
     case a9Plus = "A9+"
+    case a12Plus = "A12+"
     case unknown = "Unknown"
 }
 
@@ -63,31 +64,31 @@ public class DeviceInfo {
             case "iPhone10,3", "iPhone10,6": // iPhone X
                 return .a9Plus
             case "iPhone11,2": // iPhone XS
-                return .a9Plus
+                return .a12Plus
             case "iPhone11,4", "iPhone11,6": // iPhone XS Max
-                return .a9Plus
+                return .a12Plus
             case "iPhone11,8": // iPhone XR
-                return .a9Plus
+                return .a12Plus
             case "iPhone12,1": // iPhone 11
-                return .a9Plus
+                return .a12Plus
             case "iPhone12,3": // iPhone 11 Pro
-                return .a9Plus
+                return .a12Plus
             case "iPhone12,5": // iPhone 11 Pro Max
-                return .a9Plus
+                return .a12Plus
             case "iPhone12,8": // iPhone SE (2nd gen)
-                return .a9Plus
+                return .a12Plus
             case "iPhone13,1", "iPhone13,2", "iPhone13,3", "iPhone13,4": // iPhone 12 series
-                return .a9Plus
+                return .a12Plus
             case "iPhone14,2", "iPhone14,3", "iPhone14,4", "iPhone14,5": // iPhone 13 series
-                return .a9Plus
+                return .a12Plus
             case "iPhone14,6": // iPhone SE (3rd gen)
-                return .a9Plus
+                return .a12Plus
             case "iPhone14,7", "iPhone14,8": // iPhone 14 series
-                return .a9Plus
+                return .a12Plus
             case "iPhone15,2", "iPhone15,3": // iPhone 14 Pro series
-                return .a9Plus
+                return .a12Plus
             case "iPhone15,4": // iPhone 15
-                return .a9Plus
+                return .a12Plus
             default:
                 return .unknown
             }
