@@ -37,7 +37,7 @@ public class GPUBlurEffect {
 
 // MARK: - GPUVisualEffectView (like UIVisualEffectView)
 public class GPUVisualEffectView: UIView {
-    let contentView = UIView()
+    public let contentView = UIView()
     private let effect: GPUBlurEffect
     private let overlay = UIImageView()
     private var displayLink: CADisplayLink?
