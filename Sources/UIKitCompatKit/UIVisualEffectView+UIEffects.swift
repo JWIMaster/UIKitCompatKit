@@ -126,15 +126,15 @@ public class UIVisualEffectView: UIView {
         //saturation.saturation = effect!.vibrancy
 
         picture.addTarget(blur)
-        blur.addTarget(saturation)
-        saturation.useNextFrameForImageCapture()
+        //blur.addTarget(saturation)
+        //saturation.useNextFrameForImageCapture()
         picture.processImage()
 
-        overlay.image = saturation.imageFromCurrentFramebuffer()
+        //overlay.image = saturation.imageFromCurrentFramebuffer()
 
         picture.removeAllTargets()
         blur.removeAllTargets()
-        saturation.removeAllTargets()
+        //saturation.removeAllTargets()
     }
 
     deinit { displayLink?.invalidate() }
