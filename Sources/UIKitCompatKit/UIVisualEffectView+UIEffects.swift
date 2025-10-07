@@ -52,9 +52,9 @@ public class UIVisualEffectView: UIView {
         case .a4:
             return 0.1
         case .a5:
-            return 0.2
+            return 0.25
         case .a6:
-            return 0.3
+            return 0.35
         case .a7_a8:
             return 0.6
         case .a9Plus:
