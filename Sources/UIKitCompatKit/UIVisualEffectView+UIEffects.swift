@@ -116,7 +116,7 @@ public class UIVisualEffectView: UIView {
         }()
         let blurRadius = effect!.radius*scale
         print(blurRadius)
-        let scaledSize = CGSize(width: bounds.width * captureScale, height: bounds.height * captureScale)
+        let scaledSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
         UIGraphicsBeginImageContextWithOptions(scaledSize, false, 0)
         let ctx = UIGraphicsGetCurrentContext()!
         ctx.scaleBy(x: scale, y: scale)
