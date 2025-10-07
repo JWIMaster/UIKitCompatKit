@@ -28,7 +28,7 @@ public class DeviceInfo {
     }
 
     /// Returns the device chipset class based on identifier
-    func chipsetClass() -> ChipsetClass {
+    public func chipsetClass() -> ChipsetClass {
         let id = deviceIdentifier()
 
         // iPhone
