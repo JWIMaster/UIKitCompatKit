@@ -64,7 +64,7 @@ public class UIVisualEffectView: UIView {
         case .a7_a8:
             return 0.3
         case .a9Plus:
-            return 0.6
+            return 0.5
         case .a12Plus:
             return 1
         case .unknown:
