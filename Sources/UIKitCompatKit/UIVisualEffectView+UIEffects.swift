@@ -124,6 +124,10 @@ public class UIVisualEffectView: UIView {
         blur.blurRadiusInPixels = CGFloat(Float(blurRadius))
         let saturation = GPUImageSaturationFilter()
         saturation.saturation = effect!.vibrancy
+        
+        overlay.image = saturation.imageFromCurrentFramebuffer()
+        applyLightOverlay()
+        
 
         picture.addTarget(blur)
         blur.addTarget(saturation)
@@ -136,6 +140,30 @@ public class UIVisualEffectView: UIView {
         blur.removeAllTargets()
         saturation.removeAllTargets()
     }
+    
+    
+    private func applyLightOverlay() {
+        guard let style = effect?.style else { return }
+
+        // Remove existing overlay layer if any
+        overlay.layer.sublayers?.removeAll(where: { $0.name == "LightOverlay" })
+
+        let overlayLayer = CALayer()
+        overlayLayer.name = "LightOverlay"
+        overlayLayer.frame = overlay.bounds
+
+        switch style {
+        case .light:
+            overlayLayer.backgroundColor = UIColor(white: 1, alpha: 0.25).cgColor
+        case .regular:
+            overlayLayer.backgroundColor = UIColor(white: 1, alpha: 0.15).cgColor
+        case .dark:
+            overlayLayer.backgroundColor = UIColor.clear.cgColor
+        }
+
+        overlay.layer.addSublayer(overlayLayer)
+    }
+
 
     deinit { displayLink?.invalidate() }
 }
