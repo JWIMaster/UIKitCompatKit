@@ -47,8 +47,7 @@ public class UIVisualEffectView: UIView {
     var device: ChipsetClass {
         return DeviceInfoClass.chipsetClass()
     }
-    
-    public var captureScale: CGFloat {
+    private var captureScale: CGFloat {
         switch device {
         case .a4:
             return 0.2
@@ -65,6 +64,8 @@ public class UIVisualEffectView: UIView {
         }
     }
     
+    
+    
     public init() {
         super.init(frame: .zero)
     }
@@ -75,6 +76,7 @@ public class UIVisualEffectView: UIView {
         setup()
         startDisplayLink()
     }
+    
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
@@ -95,8 +97,8 @@ public class UIVisualEffectView: UIView {
     }
 
     @objc private func updateBlur() {
-        var blurRadius = effect!.radius*captureScale
-        
+        let blurRadius = effect!.radius*captureScale
+        print(blurRadius)
         guard let superview = superview else { return }
         isHidden = true
 
