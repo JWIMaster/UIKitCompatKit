@@ -95,6 +95,8 @@ public class UIVisualEffectView: UIView {
     }
 
     @objc private func updateBlur() {
+        var blurRadius = effect!.radius*captureScale
+        
         guard let superview = superview else { return }
         isHidden = true
 
@@ -117,7 +119,7 @@ public class UIVisualEffectView: UIView {
         // GPUImage blur + vibrancy
         let picture = GPUImagePicture(image: snapshot)!
         let blur = GPUImageGaussianBlurFilter()
-        blur.blurRadiusInPixels = CGFloat(Float(effect!.radius*captureScale))
+        blur.blurRadiusInPixels = CGFloat(Float(blurRadius))
         let saturation = GPUImageSaturationFilter()
         saturation.saturation = effect!.vibrancy
 
