@@ -46,7 +46,7 @@ public class UIBlurEffect {
 @available(iOS, introduced: 6.0, obsoleted: 8.0)
 public class UIVisualEffectView: UIView {
     public let contentView = UIView()
-    private var effect: UIBlurEffect?
+    public var effect: UIBlurEffect?
     private let overlay = UIImageView()
     private var displayLink: CADisplayLink?
     private var DeviceInfoClass = DeviceInfo()
