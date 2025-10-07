@@ -4,17 +4,17 @@ import GPUImage1Swift
 // MARK: - GPUBlurEffect (like UIBlurEffect)
 @available(iOS, introduced: 6.0, obsoleted: 8.0)
 public class UIBlurEffect {
-    enum Style {
+    public enum Style {
         case light
         case regular
         case dark
     }
 
-    let radius: CGFloat
-    let vibrancy: CGFloat
-    let style: Style?
+    public let radius: CGFloat
+    public let vibrancy: CGFloat
+    public let style: Style?
 
-    init(style: Style) {
+    public init(style: Style) {
         self.style = style
         switch style {
         case .light:
