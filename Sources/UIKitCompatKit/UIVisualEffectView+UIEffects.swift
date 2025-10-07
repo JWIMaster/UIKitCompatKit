@@ -2,7 +2,8 @@ import UIKit
 import GPUImage1Swift
 
 // MARK: - GPUBlurEffect (like UIBlurEffect)
-public class GPUBlurEffect {
+@available(iOS, introduced: 6.0, obsoleted: 8.0)
+public class UIBlurEffect {
     enum Style {
         case light
         case regular
@@ -36,9 +37,10 @@ public class GPUBlurEffect {
 }
 
 // MARK: - GPUVisualEffectView (like UIVisualEffectView)
-public class GPUVisualEffectView: UIView {
+@available(iOS, introduced: 6.0, obsoleted: 8.0)
+public class UIVisualEffectView: UIView {
     public let contentView = UIView()
-    private let effect: GPUBlurEffect
+    private let effect: UIBlurEffect
     private let overlay = UIImageView()
     private var displayLink: CADisplayLink?
     private var DeviceInfoClass = DeviceInfo()
@@ -63,7 +65,7 @@ public class GPUVisualEffectView: UIView {
         }
     }
 
-    public init(effect: GPUBlurEffect) {
+    public init(effect: UIBlurEffect) {
         self.effect = effect
         super.init(frame: .zero)
         setup()
@@ -130,8 +132,6 @@ public class GPUVisualEffectView: UIView {
     deinit { displayLink?.invalidate() }
 }
 
-@available(iOS, introduced: 6.0, obsoleted: 8.0)
-public typealias UIVisualEffectView = GPUVisualEffectView
 
-@available(iOS, introduced: 6.0, obsoleted: 8.0)
-public typealias UIBlurEffect = GPUBlurEffect
+
+
