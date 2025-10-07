@@ -156,7 +156,7 @@ public class UIVisualEffectView: UIView {
         case .light:
             overlayLayer.backgroundColor = UIColor(white: 1, alpha: 0.25).cgColor
         case .regular:
-            overlayLayer.backgroundColor = UIColor(white: 1, alpha: 0.15).cgColor
+            overlayLayer.backgroundColor = UIColor(white: 1, alpha: 0.25).cgColor
         case .dark:
             overlayLayer.backgroundColor = UIColor.clear.cgColor
         }
