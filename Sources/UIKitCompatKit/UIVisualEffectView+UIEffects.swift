@@ -41,6 +41,27 @@ public class GPUVisualEffectView: UIView {
     private let effect: GPUBlurEffect
     private let overlay = UIImageView()
     private var displayLink: CADisplayLink?
+    private var DeviceInfoClass = DeviceInfo()
+    var device: ChipsetClass {
+        return DeviceInfoClass.chipsetClass()
+    }
+    
+    private var captureScale: CGFloat {
+        switch device {
+        case .a4:
+            return 0.2
+        case .a5:
+            return 0.3
+        case .a6:
+            return 0.6
+        case .a7_a8:
+            return 0.8
+        case .a9Plus:
+            return 1
+        case .unknown:
+            return 0.6
+        }
+    }
 
     init(effect: GPUBlurEffect) {
         self.effect = effect
@@ -72,7 +93,7 @@ public class GPUVisualEffectView: UIView {
         isHidden = true
 
         // Downscale for performance
-        let scale: CGFloat = 0.4
+        let scale: CGFloat = captureScale
         let scaledSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
         UIGraphicsBeginImageContextWithOptions(scaledSize, false, 0)
         let ctx = UIGraphicsGetCurrentContext()!

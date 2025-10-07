@@ -1,6 +1,6 @@
 import UIKit
 
-enum ChipsetClass: String {
+public enum ChipsetClass: String {
     case a4 = "A4"
     case a5 = "A5"
     case a6 = "A6"
@@ -9,11 +9,11 @@ enum ChipsetClass: String {
     case unknown = "Unknown"
 }
 
-class DeviceInfo {
+public class DeviceInfo {
 
     static let shared = DeviceInfo()
 
-    private init() {}
+    public init() {}
 
     /// Returns the human-readable device identifier, e.g., "iPhone8,1"
     func deviceIdentifier() -> String {
@@ -35,9 +35,9 @@ class DeviceInfo {
         if id.hasPrefix("iPhone") {
             switch id {
             case "iPhone1,1", "iPhone1,2": // iPhone 1 & 3G
-                return .a4
+                return .unknown
             case "iPhone2,1": // iPhone 3GS
-                return .a5
+                return .unknown
             case "iPhone3,1", "iPhone3,2", "iPhone3,3": // iPhone 4
                 return .a4
             case "iPhone4,1": // iPhone 4S
@@ -47,11 +47,11 @@ class DeviceInfo {
             case "iPhone5,3", "iPhone5,4": // iPhone 5C
                 return .a6
             case "iPhone6,1", "iPhone6,2": // iPhone 5S
-                return .a6
+                return .a7_a8
             case "iPhone7,1", "iPhone7,2": // iPhone 6 & 6 Plus
                 return .a7_a8
             case "iPhone8,1", "iPhone8,2", "iPhone8,4": // iPhone 6S & SE
-                return .a7_a8
+                return .a9Plus
             case "iPhone9,1", "iPhone9,3": // iPhone 7
                 return .a9Plus
             case "iPhone9,2", "iPhone9,4": // iPhone 7 Plus
@@ -137,17 +137,17 @@ class DeviceInfo {
         if id.hasPrefix("iPod") {
             switch id {
             case "iPod1,1": // iPod touch (1st gen)
-                return .a4
+                return .unknown
             case "iPod2,1": // iPod touch (2nd gen)
-                return .a5
+                return .unknown
             case "iPod3,1": // iPod touch (3rd gen)
-                return .a6
+                return .unknown
             case "iPod4,1": // iPod touch (4th gen)
-                return .a7_a8
+                return .a4
             case "iPod5,1": // iPod touch (5th gen)
-                return .a9Plus
+                return .a5
             case "iPod7,1": // iPod touch (6th gen)
-                return .a9Plus
+                return .a7_a8
             case "iPod9,1": // iPod touch (7th gen)
                 return .a9Plus
             default:
@@ -159,7 +159,7 @@ class DeviceInfo {
     }
 
     /// Convenience method: get a human-readable string
-    func chipsetClassString() -> String {
-        return chipsetClass().rawValue
+    public func chipsetClassString() -> ChipsetClass {
+        return chipsetClass()
     }
 }
