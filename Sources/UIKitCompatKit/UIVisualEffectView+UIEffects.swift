@@ -48,7 +48,7 @@ public class UIVisualEffectView: UIView {
         return DeviceInfoClass.chipsetClass()
     }
     
-    private var captureScale: CGFloat {
+    public var captureScale: CGFloat {
         switch device {
         case .a4:
             return 0.2
@@ -102,7 +102,7 @@ public class UIVisualEffectView: UIView {
 
         // Downscale for performance
         let scale: CGFloat = captureScale
-        let scaledSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
+        let scaledSize = CGSize(width: bounds.width * captureScale, height: bounds.height * captureScale)
         UIGraphicsBeginImageContextWithOptions(scaledSize, false, 0)
         let ctx = UIGraphicsGetCurrentContext()!
         ctx.scaleBy(x: scale, y: scale)
