@@ -102,28 +102,22 @@ public class UIVisualEffectView: UIView {
         displayLink?.add(to: .main, forMode: .common)
     }
 
-    
-    
-    private var previousBlurredImage: UIImage?
+    // Add these properties to your UIVisualEffectView class
+    private var previousBlurredPicture: GPUImagePicture?
+    private let blendFilter: GPUImageAlphaBlendFilter = {
+        let f = GPUImageAlphaBlendFilter()
+        f.mix = 0.3 // Weight of the new frame (0 = only old frame, 1 = only new frame)
+        return f
+    }()
 
     @objc private func updateBlur() {
-        guard let superview = superview else { return }
+        guard let superview = superview, let effect = effect else { return }
         isHidden = true
 
-        // Determine capture scale
-        let scale: CGFloat = {
-            if effect!.chosenCaptureScale == 0 {
-                return captureScale
-            } else {
-                return effect!.chosenCaptureScale
-            }
-        }()
-
-        let blurRadius = effect!.radius * scale
-        print(blurRadius)
-
-        // Downscale snapshot for performance
+        // Capture snapshot at low scale
+        let scale: CGFloat = (effect.chosenCaptureScale != 0) ? effect.chosenCaptureScale : captureScale
         let scaledSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
+
         UIGraphicsBeginImageContextWithOptions(scaledSize, false, 0)
         let ctx = UIGraphicsGetCurrentContext()!
         ctx.translateBy(x: -frame.origin.x, y: -frame.origin.y)
@@ -139,35 +133,39 @@ public class UIVisualEffectView: UIView {
         // GPUImage blur + saturation
         let picture = GPUImagePicture(image: snapshot)!
         let blur = GPUImageGaussianBlurFilter()
-        blur.blurRadiusInPixels = CGFloat(Float(blurRadius))
+        blur.blurRadiusInPixels = effect.radius * scale
         let saturation = GPUImageSaturationFilter()
-        saturation.saturation = effect!.vibrancy
+        saturation.saturation = effect.vibrancy
 
         picture.addTarget(blur)
         blur.addTarget(saturation)
         saturation.useNextFrameForImageCapture()
         picture.processImage()
 
-        let newFrame = saturation.imageFromCurrentFramebuffer()
+        let newBlurredPicture = GPUImagePicture(image: saturation.imageFromCurrentFramebuffer())!
 
-        // Temporal accumulation to smooth flicker
-        if let previous = previousBlurredImage {
-            UIGraphicsBeginImageContextWithOptions(newFrame!.size, false, 0)
-            previous.draw(in: CGRect(origin: .zero, size: newFrame!.size))
-            newFrame!.draw(in: CGRect(origin: .zero, size: newFrame!.size), blendMode: .normal, alpha: 0.3) // 0.3 = new frame weight
-            let blended = UIGraphicsGetImageFromCurrentImageContext()
-            UIGraphicsEndImageContext()
+        // Temporal accumulation: blend with previous frame if it exists
+        if let previous = previousBlurredPicture {
+            previous.addTarget(blendFilter)
+            newBlurredPicture.addTarget(blendFilter)
+            blendFilter.useNextFrameForImageCapture()
+            previous.processImage()
+            newBlurredPicture.processImage()
+            overlay.image = blendFilter.imageFromCurrentFramebuffer()
             
-            overlay.image = blended
-            previousBlurredImage = blended
+            previous.removeAllTargets()
+            newBlurredPicture.removeAllTargets()
         } else {
-            overlay.image = newFrame
-            previousBlurredImage = newFrame
+            overlay.image = newBlurredPicture.imageFromCurrentFramebuffer()
         }
 
-        // Apply light overlay for realistic style
+        // Save current frame for next update
+        previousBlurredPicture = newBlurredPicture
+
+        // Apply light/dark overlay
         applyLightOverlay()
 
+        // Clean up GPU targets
         picture.removeAllTargets()
         blur.removeAllTargets()
         saturation.removeAllTargets()
