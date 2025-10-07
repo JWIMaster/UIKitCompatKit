@@ -19,13 +19,13 @@ public class UIBlurEffect {
         switch style {
         case .light:
             self.radius = 8
-            self.vibrancy = 1.0
+            self.vibrancy = 1.25
         case .regular:
             self.radius = 15
-            self.vibrancy = 1.0
+            self.vibrancy = 1.15
         case .dark:
             self.radius = 25
-            self.vibrancy = 1.0
+            self.vibrancy = 1.05
         }
     }
 
@@ -97,7 +97,7 @@ public class UIVisualEffectView: UIView {
     }
 
     @objc private func updateBlur() {
-        let blurRadius = effect!.radius*captureScale
+        let blurRadius = effect!.radius*captureScale*captureScale
         print(blurRadius)
         guard let superview = superview else { return }
         isHidden = true
