@@ -61,7 +61,7 @@ public class UIVisualEffectView: UIView {
         case .a9Plus:
             return 1
         case .unknown:
-            return 0.3
+            return 1
         }
     }
     
@@ -114,10 +114,11 @@ public class UIVisualEffectView: UIView {
         UIGraphicsEndImageContext()
         isHidden = false
 
-        // GPUImage blur + vibrancy
         let picture = GPUImagePicture(image: snapshot)!
         let blur = GPUImageGaussianBlurFilter()
-        blur.blurRadiusInPixels = CGFloat(Float(effect!.radius)) * (1 / scale)
+        // Adjust blur radius for scale
+        blur.blurRadiusInPixels = CGFloat(Float(effect!.radius)) / scale
+
         let saturation = GPUImageSaturationFilter()
         saturation.saturation = effect!.vibrancy
 
@@ -131,6 +132,7 @@ public class UIVisualEffectView: UIView {
         picture.removeAllTargets()
         blur.removeAllTargets()
         saturation.removeAllTargets()
+
     }
 
     deinit { displayLink?.invalidate() }
