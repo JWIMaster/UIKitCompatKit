@@ -28,7 +28,7 @@ public class GPUBlurEffect {
         }
     }
 
-    init(blurRadius: CGFloat, vibrancy: CGFloat = 1.0) {
+    public init(blurRadius: CGFloat, vibrancy: CGFloat = 1.0) {
         self.style = nil
         self.radius = blurRadius
         self.vibrancy = vibrancy
@@ -63,7 +63,7 @@ public class GPUVisualEffectView: UIView {
         }
     }
 
-    init(effect: GPUBlurEffect) {
+    public init(effect: GPUBlurEffect) {
         self.effect = effect
         super.init(frame: .zero)
         setup()
