@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "gpuimage1swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/JWIMaster/GPUImage1Swift.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "4a936d991f248bb18373aba4c326055b04f3e566"
+      }
+    }
+  ],
+  "version" : 2
+}
