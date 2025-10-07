@@ -102,11 +102,15 @@ public class UIVisualEffectView: UIView {
         displayLink?.add(to: .main, forMode: .common)
     }
 
+    
+    
+    private var previousBlurredImage: UIImage?
+
     @objc private func updateBlur() {
         guard let superview = superview else { return }
         isHidden = true
 
-        // Downscale for performance
+        // Determine capture scale
         let scale: CGFloat = {
             if effect!.chosenCaptureScale == 0 {
                 return captureScale
@@ -114,12 +118,14 @@ public class UIVisualEffectView: UIView {
                 return effect!.chosenCaptureScale
             }
         }()
-        let blurRadius = effect!.radius*scale
+
+        let blurRadius = effect!.radius * scale
         print(blurRadius)
+
+        // Downscale snapshot for performance
         let scaledSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
         UIGraphicsBeginImageContextWithOptions(scaledSize, false, 0)
         let ctx = UIGraphicsGetCurrentContext()!
-        ctx.scaleBy(x: scale, y: scale)
         ctx.translateBy(x: -frame.origin.x, y: -frame.origin.y)
         superview.layer.render(in: ctx)
         guard let snapshot = UIGraphicsGetImageFromCurrentImageContext() else {
@@ -130,28 +136,43 @@ public class UIVisualEffectView: UIView {
         UIGraphicsEndImageContext()
         isHidden = false
 
-        // GPUImage blur + vibrancy
+        // GPUImage blur + saturation
         let picture = GPUImagePicture(image: snapshot)!
         let blur = GPUImageGaussianBlurFilter()
         blur.blurRadiusInPixels = CGFloat(Float(blurRadius))
         let saturation = GPUImageSaturationFilter()
         saturation.saturation = effect!.vibrancy
-        
-        overlay.image = saturation.imageFromCurrentFramebuffer()
-        applyLightOverlay()
-        
 
         picture.addTarget(blur)
         blur.addTarget(saturation)
         saturation.useNextFrameForImageCapture()
         picture.processImage()
 
-        overlay.image = saturation.imageFromCurrentFramebuffer()
+        let newFrame = saturation.imageFromCurrentFramebuffer()
+
+        // Temporal accumulation to smooth flicker
+        if let previous = previousBlurredImage {
+            UIGraphicsBeginImageContextWithOptions(newFrame!.size, false, 0)
+            previous.draw(in: CGRect(origin: .zero, size: newFrame!.size))
+            newFrame!.draw(in: CGRect(origin: .zero, size: newFrame!.size), blendMode: .normal, alpha: 0.3) // 0.3 = new frame weight
+            let blended = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+            
+            overlay.image = blended
+            previousBlurredImage = blended
+        } else {
+            overlay.image = newFrame
+            previousBlurredImage = newFrame
+        }
+
+        // Apply light overlay for realistic style
+        applyLightOverlay()
 
         picture.removeAllTargets()
         blur.removeAllTargets()
         saturation.removeAllTargets()
     }
+
     
     
     private func applyLightOverlay() {
