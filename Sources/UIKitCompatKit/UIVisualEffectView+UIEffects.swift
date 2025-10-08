@@ -105,74 +105,55 @@ public class UIVisualEffectView: UIView {
     }
 
     @objc public func updateBlur() {
-        guard let window = superview?.window, let effect = effect else { return }
-
-        // Prevent feedback
+        guard let superview = superview else { return }
         isHidden = true
 
-        // Determine capture scale
-        let scale: CGFloat = effect.chosenCaptureScale == 0 ? captureScale : effect.chosenCaptureScale
-
-        // Render full window to snapshot
-        UIGraphicsBeginImageContextWithOptions(window.bounds.size, false, 1.0)
-        window.layer.render(in: UIGraphicsGetCurrentContext()!)
-        guard let fullSnapshot = UIGraphicsGetImageFromCurrentImageContext() else {
+        // Downscale for performance
+        let scale: CGFloat = {
+            if effect!.chosenCaptureScale == 0 {
+                return captureScale
+            } else {
+                return effect!.chosenCaptureScale
+            }
+        }()
+        let blurRadius = effect!.radius*scale
+        print(blurRadius)
+        let scaledSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
+        UIGraphicsBeginImageContextWithOptions(scaledSize, false, 0)
+        let ctx = UIGraphicsGetCurrentContext()!
+        ctx.scaleBy(x: scale, y: scale)
+        ctx.translateBy(x: -frame.origin.x, y: -frame.origin.y)
+        superview.layer.render(in: ctx)
+        guard let snapshot = UIGraphicsGetImageFromCurrentImageContext() else {
             UIGraphicsEndImageContext()
             isHidden = false
             return
         }
         UIGraphicsEndImageContext()
-
-        // Crop snapshot to blurView frame
-        let frameInWindow = convert(bounds, to: window)
-        let cropRect = CGRect(x: frameInWindow.origin.x * fullSnapshot.scale,
-                              y: frameInWindow.origin.y * fullSnapshot.scale,
-                              width: frameInWindow.width * fullSnapshot.scale,
-                              height: frameInWindow.height * fullSnapshot.scale)
-
-        guard let cgImage = fullSnapshot.cgImage,
-              let cropped = cgImage.cropping(to: cropRect) else {
-            isHidden = false
-            return
-        }
-
-        // Downscale manually
-        let scaledSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
-        UIGraphicsBeginImageContextWithOptions(scaledSize, false, 1.0)
-        UIImage(cgImage: cropped).draw(in: CGRect(origin: .zero, size: scaledSize))
-        let snapshot = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-
         isHidden = false
-        guard let snapshotImage = snapshot else { return }
 
-        // GPUImage processing
-        autoreleasepool {
-            let picture = GPUImagePicture(image: snapshotImage)!
-            let blur = GPUImageGaussianBlurFilter()
-            blur.blurRadiusInPixels = CGFloat(Float(effect.radius * scale))
+        // GPUImage blur + vibrancy
+        let picture = GPUImagePicture(image: snapshot)!
+        let blur = GPUImageGaussianBlurFilter()
+        blur.blurRadiusInPixels = CGFloat(Float(blurRadius))
+        let saturation = GPUImageSaturationFilter()
+        saturation.saturation = effect!.vibrancy
+        
+        overlay.image = saturation.imageFromCurrentFramebuffer()
+        applyLightOverlay()
+        
 
-            let saturation = GPUImageSaturationFilter()
-            saturation.saturation = CGFloat(Float(effect.vibrancy))
+        picture.addTarget(blur)
+        blur.addTarget(saturation)
+        saturation.useNextFrameForImageCapture()
+        picture.processImage()
 
-            picture.addTarget(blur)
-            blur.addTarget(saturation)
+        overlay.image = saturation.imageFromCurrentFramebuffer()
 
-            saturation.useNextFrameForImageCapture()
-            picture.processImage()
-            glFinish() // Ensure OpenGL finishes before grabbing image
-
-            if let blurred = saturation.imageFromCurrentFramebuffer() {
-                overlay.image = blurred
-                applyLightOverlay()
-            }
-
-            picture.removeAllTargets()
-            blur.removeAllTargets()
-            saturation.removeAllTargets()
-        }
+        picture.removeAllTargets()
+        blur.removeAllTargets()
+        saturation.removeAllTargets()
     }
-
     
     
     private func applyLightOverlay() {
