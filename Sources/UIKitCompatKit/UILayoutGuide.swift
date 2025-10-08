@@ -185,12 +185,12 @@ public extension UIView {
         var rightInset: CGFloat = 0
 
         // Status bar height
-        if #available(iOS 7.0.1, *) {
+        if #available(iOS 13.0.0, *) {
             topInset += UIApplication.shared.isStatusBarHidden ? 0 : 20
         }
 
         // Navigation bar height
-        if #available(iOS 7.0.1, *) {
+        if #available(iOS 13.0.0, *) {
             if let nav = closestViewController()?.navigationController, !nav.isNavigationBarHidden {
                 topInset += nav.navigationBar.frame.height
             }
