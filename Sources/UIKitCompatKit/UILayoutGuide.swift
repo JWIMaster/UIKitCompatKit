@@ -165,3 +165,45 @@ public extension UIViewController {
         return guide
     }
 }
+
+
+// MARK: - UIView safeAreaInsets backport
+private var safeAreaInsetsKey: UInt8 = 0
+@available(iOS, introduced: 6.0, obsoleted: 11.0)
+public extension UIView {
+    
+    @available(iOS, introduced: 6.0, obsoleted: 11.0)
+    var safeAreaInsets: UIEdgeInsets {
+
+        if let insets = objc_getAssociatedObject(self, &safeAreaInsetsKey) as? NSValue {
+            return insets.uiEdgeInsetsValue
+        }
+
+        var topInset: CGFloat = 0
+        var bottomInset: CGFloat = 0
+        var leftInset: CGFloat = 0
+        var rightInset: CGFloat = 0
+
+        // Status bar height
+        topInset += UIApplication.shared.isStatusBarHidden ? 0 : 20
+
+        // Navigation bar height
+        if let nav = closestViewController()?.navigationController, !nav.isNavigationBarHidden {
+            topInset += nav.navigationBar.frame.height
+        }
+
+        // Tab bar height
+        if let tab = closestViewController()?.tabBarController, !tab.tabBar.isHidden {
+            bottomInset += tab.tabBar.frame.height
+        }
+
+        let insets = UIEdgeInsets(top: topInset, left: leftInset, bottom: bottomInset, right: rightInset)
+        objc_setAssociatedObject(self, &safeAreaInsetsKey, NSValue(uiEdgeInsets: insets), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        return insets
+    }
+
+    // Helper to find the nearest UIViewController
+    private func closestViewController() -> UIViewController? {
+        return sequence(first: self.next, next: { $0?.next }).compactMap { $0 as? UIViewController }.first
+    }
+}
