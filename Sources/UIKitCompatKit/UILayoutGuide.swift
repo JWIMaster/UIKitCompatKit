@@ -188,8 +188,10 @@ public extension UIView {
         topInset += UIApplication.shared.isStatusBarHidden ? 0 : 20
 
         // Navigation bar height
-        if let nav = closestViewController()?.navigationController, !nav.isNavigationBarHidden {
-            topInset += nav.navigationBar.frame.height
+        if #unavailable(iOS 7.0.1) {
+            if let nav = closestViewController()?.navigationController, !nav.isNavigationBarHidden {
+                topInset += nav.navigationBar.frame.height
+            }
         }
 
         // Tab bar height
