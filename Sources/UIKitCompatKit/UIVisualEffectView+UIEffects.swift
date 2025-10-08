@@ -104,7 +104,7 @@ public class UIVisualEffectView: UIView {
         displayLink?.add(to: .main, forMode: .common)
     }
 
-    @objc private func updateBlur() {
+    @objc public func updateBlur() {
         guard let superview = superview else { return }
         isHidden = true
 
