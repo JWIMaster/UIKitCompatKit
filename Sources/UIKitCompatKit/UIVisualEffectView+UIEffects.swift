@@ -105,85 +105,69 @@ public class UIVisualEffectView: UIView {
     }
 
     @objc public func updateBlur() {
-        guard let superview = superview, let effect = effect else { return }
+        guard let window = superview?.window, let effect = effect else { return }
 
-        // hide this view so it does not appear in the snapshot
+        // Prevent feedback
         isHidden = true
 
-        // choose capture scale
-        let scaleToUse: CGFloat = {
-            if effect.chosenCaptureScale == 0 {
-                return captureScale
-            } else {
-                return effect.chosenCaptureScale
-            }
-        }()
+        // Determine capture scale
+        let scale: CGFloat = effect.chosenCaptureScale == 0 ? captureScale : effect.chosenCaptureScale
 
-        // target snapshot size in pixels. We will create a context exactly this size and avoid extra context scaling
-        let targetSize = CGSize(width: bounds.width * scaleToUse, height: bounds.height * scaleToUse)
-
-        // compute blur radius to apply to downsampled image
-        // effect.radius is in device points. When we downsample by scaleToUse, convert to pixels for the blur filter.
-        let blurRadiusInPixels = max(0.0, effect.radius * scaleToUse)
-
-        // Take the snapshot at the downsampled size
-        UIGraphicsBeginImageContextWithOptions(targetSize, false, 1.0) // explicit scale of 1 for a pixel sized context
-        guard let ctx = UIGraphicsGetCurrentContext() else {
-            UIGraphicsEndImageContext()
-            isHidden = false
-            return
-        }
-
-        // translate so we capture the correct area of superview. Multiply translation by scaleToUse because
-        // the context is in downsampled pixels
-        ctx.translateBy(x: -frame.origin.x * scaleToUse, y: -frame.origin.y * scaleToUse)
-
-        // render the superview layer into the downsampled context
-        superview.layer.render(in: ctx)
-
-        guard let snapshot = UIGraphicsGetImageFromCurrentImageContext() else {
+        // Render full window to snapshot
+        UIGraphicsBeginImageContextWithOptions(window.bounds.size, false, 1.0)
+        window.layer.render(in: UIGraphicsGetCurrentContext()!)
+        guard let fullSnapshot = UIGraphicsGetImageFromCurrentImageContext() else {
             UIGraphicsEndImageContext()
             isHidden = false
             return
         }
         UIGraphicsEndImageContext()
 
-        // restore visibility so view hierarchy is intact
-        isHidden = false
+        // Crop snapshot to blurView frame
+        let frameInWindow = convert(bounds, to: window)
+        let cropRect = CGRect(x: frameInWindow.origin.x * fullSnapshot.scale,
+                              y: frameInWindow.origin.y * fullSnapshot.scale,
+                              width: frameInWindow.width * fullSnapshot.scale,
+                              height: frameInWindow.height * fullSnapshot.scale)
 
-        // GPUImage processing. Important sequence:
-        // 1) Create picture from snapshot
-        // 2) Configure filters
-        // 3) Call useNextFrameForImageCapture on the final filter
-        // 4) call processImage on the picture
-        // 5) read final framebuffer into UIImage
+        guard let cgImage = fullSnapshot.cgImage,
+              let cropped = cgImage.cropping(to: cropRect) else {
+            isHidden = false
+            return
+        }
+
+        // Downscale manually
+        let scaledSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
+        UIGraphicsBeginImageContextWithOptions(scaledSize, false, 1.0)
+        UIImage(cgImage: cropped).draw(in: CGRect(origin: .zero, size: scaledSize))
+        let snapshot = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        isHidden = false
+        guard let snapshotImage = snapshot else { return }
+
+        // GPUImage processing
         autoreleasepool {
-            let picture = GPUImagePicture(image: snapshot)
+            let picture = GPUImagePicture(image: snapshotImage)!
             let blur = GPUImageGaussianBlurFilter()
-            blur.blurRadiusInPixels = CGFloat(Float(blurRadiusInPixels))
+            blur.blurRadiusInPixels = CGFloat(Float(effect.radius * scale))
 
             let saturation = GPUImageSaturationFilter()
             saturation.saturation = CGFloat(Float(effect.vibrancy))
 
-            // build pipeline picture -> blur -> saturation
-            picture?.addTarget(blur)
+            picture.addTarget(blur)
             blur.addTarget(saturation)
 
-            // ask final filter to capture next frame, then process
             saturation.useNextFrameForImageCapture()
-            picture?.processImage()
+            picture.processImage()
+            glFinish() // Ensure OpenGL finishes before grabbing image
 
-            // now grab final UIImage
-            if let resultImage = saturation.imageFromCurrentFramebuffer() {
-                // UI updates on main thread
-                DispatchQueue.main.async {
-                    self.overlay.image = resultImage
-                    self.applyLightOverlay()
-                }
+            if let blurred = saturation.imageFromCurrentFramebuffer() {
+                overlay.image = blurred
+                applyLightOverlay()
             }
 
-            // clean up targets
-            picture?.removeAllTargets()
+            picture.removeAllTargets()
             blur.removeAllTargets()
             saturation.removeAllTargets()
         }
