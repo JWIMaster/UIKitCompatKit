@@ -44,7 +44,7 @@ public class UIBlurEffect {
 
 // MARK: - GPUVisualEffectView (like UIVisualEffectView)
 @available(iOS, introduced: 6.0, obsoleted: 8.0)
-public class UIVisualEffectView: UIView {
+open class UIVisualEffectView: UIView {
     public let contentView = UIView()
     public var effect: UIBlurEffect?
     public let overlay = UIImageView()
