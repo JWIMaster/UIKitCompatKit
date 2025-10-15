@@ -47,7 +47,7 @@ public class UIBlurEffect {
 public class UIVisualEffectView: UIView {
     public let contentView = UIView()
     public var effect: UIBlurEffect?
-    private let overlay = UIImageView()
+    public let overlay = UIImageView()
     private var displayLink: CADisplayLink?
     private var DeviceInfoClass = DeviceInfo()
     var device: ChipsetClass {
