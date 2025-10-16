@@ -141,7 +141,7 @@ open class UIVisualEffectView: UIView {
         saturation.saturation = effect!.vibrancy
         
         overlay.image = saturation.imageFromCurrentFramebuffer()
-        applyLightOverlay()
+        //applyLightOverlay()
         
 
         picture.addTarget(blur)
