@@ -13,6 +13,7 @@ public class UIBlurEffect {
     public let radius: CGFloat
     public let vibrancy: CGFloat
     public let style: Style?
+
     public let chosenCaptureScale: CGFloat
     
     public init(style: Style, chosenCaptureScale: CGFloat = 0) {
@@ -21,14 +22,16 @@ public class UIBlurEffect {
         case .light:
             self.radius = 8
             self.vibrancy = 1.25
+            self.chosenCaptureScale = chosenCaptureScale
         case .regular:
             self.radius = 50
             self.vibrancy = 1.7
+            self.chosenCaptureScale = chosenCaptureScale
         case .dark:
             self.radius = 25
             self.vibrancy = 1.05
+            self.chosenCaptureScale = chosenCaptureScale
         }
-        self.chosenCaptureScale = chosenCaptureScale
     }
 
     public init(blurRadius: CGFloat, vibrancy: CGFloat = 1.0, chosenCaptureScale: CGFloat = 0) {
@@ -42,19 +45,13 @@ public class UIBlurEffect {
 // MARK: - GPUVisualEffectView (like UIVisualEffectView)
 @available(iOS, introduced: 6.0, obsoleted: 8.0)
 open class UIVisualEffectView: UIView {
-    
-    // MARK: - Public properties
     public let contentView = UIView()
     public var effect: UIBlurEffect?
     public let overlay = UIImageView()
-    
     private var displayLink: CADisplayLink?
     private var DeviceInfoClass = DeviceInfo()
-    
-    var device: ChipsetClass {
-        return DeviceInfoClass.chipsetClass()
-    }
-    
+    var device: ChipsetClass { return DeviceInfoClass.chipsetClass() }
+
     private var captureScale: CGFloat {
         switch device {
         case .a4: return 0.1
@@ -66,14 +63,16 @@ open class UIVisualEffectView: UIView {
         case .unknown: return 0.3
         }
     }
-    
-    // MARK: - Shared snapshot per frame
+
+    // MARK: - Shared Snapshot
     private static var sharedSnapshot: UIImage?
-    private static var lastFrameTime: TimeInterval = 0
-    
-    // MARK: - Init
-    public init() { super.init(frame: .zero) }
-    
+    private static weak var sharedSuperview: UIView?
+    private static var lastFrameTime: CFTimeInterval = 0
+
+    public init() {
+        super.init(frame: .zero)
+    }
+
     public init(effect: UIBlurEffect) {
         self.effect = effect
         super.init(frame: .zero)
@@ -82,81 +81,73 @@ open class UIVisualEffectView: UIView {
     }
 
     required public init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-    
-    // MARK: - Setup
+
     private func setup() {
         clipsToBounds = true
         overlay.frame = bounds
         overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         overlay.layer.compositingFilter = "screenBlendMode"
         addSubview(overlay)
-        
+
         contentView.frame = bounds
         contentView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         addSubview(contentView)
     }
-    
-    // MARK: - Display Link
+
     private func startDisplayLink() {
         displayLink = CADisplayLink(target: self, selector: #selector(updateBlur))
         displayLink?.add(to: .main, forMode: .common)
     }
-    
-    // MARK: - Update Blur
-    @objc public func updateBlur() {
-        guard let superview = superview, let effect = effect else { return }
 
-        // Capture shared snapshot once per frame
-        let currentTime = CACurrentMediaTime()
-        if currentTime != UIVisualEffectView.lastFrameTime {
-            
-            isHidden = true // prevent capturing self
-            
-            let scale: CGFloat = effect.chosenCaptureScale == 0 ? captureScale : effect.chosenCaptureScale
-            let scaledSize = CGSize(width: superview.bounds.width * scale, height: superview.bounds.height * scale)
-            
+    @objc public func updateBlur() {
+        guard let superview = superview else { return }
+        isHidden = true
+
+        // Determine scale
+        let scale: CGFloat = {
+            if effect!.chosenCaptureScale == 0 { return captureScale }
+            else { return effect!.chosenCaptureScale }
+        }()
+
+        // Only recapture once per frame for the same superview
+        if UIVisualEffectView.sharedSuperview !== superview || CACurrentMediaTime() != UIVisualEffectView.lastFrameTime {
+            let scaledSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
             UIGraphicsBeginImageContextWithOptions(scaledSize, false, 0)
             let ctx = UIGraphicsGetCurrentContext()!
             ctx.scaleBy(x: scale, y: scale)
-            ctx.translateBy(x: -superview.frame.origin.x, y: -superview.frame.origin.y)
+            ctx.translateBy(x: -frame.origin.x, y: -frame.origin.y)
             superview.layer.render(in: ctx)
             UIVisualEffectView.sharedSnapshot = UIGraphicsGetImageFromCurrentImageContext()
             UIGraphicsEndImageContext()
-            
-            UIVisualEffectView.lastFrameTime = currentTime
-            isHidden = false
+            UIVisualEffectView.sharedSuperview = superview
+            UIVisualEffectView.lastFrameTime = CACurrentMediaTime()
         }
-        
+
+        isHidden = false
         guard let snapshot = UIVisualEffectView.sharedSnapshot else { return }
-        
+
         // GPUImage blur + vibrancy
-        let scale = effect.chosenCaptureScale == 0 ? captureScale : effect.chosenCaptureScale
-        let blurRadius = effect.radius * scale
-        
         let picture = GPUImagePicture(image: snapshot)!
         let blur = GPUImageGaussianBlurFilter()
-        blur.blurRadiusInPixels = CGFloat(Float(blurRadius))
+        blur.blurRadiusInPixels = CGFloat(Float(effect!.radius * scale))
         let saturation = GPUImageSaturationFilter()
-        saturation.saturation = effect.vibrancy
-        
+        saturation.saturation = effect!.vibrancy
+
+        picture.addTarget(blur)
         blur.addTarget(saturation)
         saturation.useNextFrameForImageCapture()
-        picture.addTarget(blur)
         picture.processImage()
-        
+
         overlay.image = saturation.imageFromCurrentFramebuffer()
-        
         picture.removeAllTargets()
         blur.removeAllTargets()
         saturation.removeAllTargets()
-        
+
         applyLightOverlay()
     }
-    
-    // MARK: - Light Overlay
+
     private func applyLightOverlay() {
         guard let style = effect?.style else { return }
-
         overlay.layer.sublayers?.removeAll(where: { $0.name == "LightOverlay" })
 
         let overlayLayer = CALayer()
@@ -174,8 +165,6 @@ open class UIVisualEffectView: UIView {
 
         overlay.layer.addSublayer(overlayLayer)
     }
-    
-    deinit {
-        displayLink?.invalidate()
-    }
+
+    deinit { displayLink?.invalidate() }
 }
