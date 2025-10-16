@@ -19,12 +19,17 @@ let package = Package(
     targets: [
         .target(
             name: "UIKitCompatKit",
-            dependencies: ["OAStackView", "GPUImage1Swift"],
+            dependencies: ["OAStackView", "GPUImage1Swift", "LiveFrost"],
             path: "Sources/UIKitCompatKit"
         ),
         .target(
             name: "OAStackView",
             path: "Sources/OAStackView",
+            publicHeadersPath: "."
+        ),
+        .target(
+            name: "LiveFrost",
+            path: "Sources/LiveFrost",
             publicHeadersPath: "."
         ),
         .testTarget(
