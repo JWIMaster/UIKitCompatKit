@@ -92,6 +92,7 @@ open class UIVisualEffectView: UIView {
         clipsToBounds = true
         overlay.frame = bounds
         overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        overlay.layer.compositingFilter = "screenBlendMode"
         addSubview(overlay)
 
         contentView.frame = bounds
