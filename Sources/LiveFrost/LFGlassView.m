@@ -319,40 +319,55 @@
 }
 
 - (void) refresh {
-	if (++_currentFrameInterval < _frameInterval) {
-		return;
-	}
-	_currentFrameInterval = 0;
-	
-	UIView *superview = self.superview;
-#ifdef DEBUG
-	NSParameterAssert(superview);
-	NSParameterAssert(self.window);
-	NSParameterAssert(_effectInContext);
-	NSParameterAssert(_effectOutContext);
-#endif
-	
-	CGContextRef effectInContext = CGContextRetain(_effectInContext);
-	CGContextRef effectOutContext = CGContextRetain(_effectOutContext);
-	vImage_Buffer effectInBuffer = _effectInBuffer;
-	vImage_Buffer effectOutBuffer = _effectOutBuffer;
-	
-	self.hidden = YES;
-	[superview.layer renderInContext:effectInContext];
-	self.hidden = NO;
-	
-	uint32_t blurKernel = _precalculatedBlurKernel;
-	
-	vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-	vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-	vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-	
-	CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
-	self.layer.contents = (__bridge id)(outImage);
-	CGImageRelease(outImage);
+    if (++_currentFrameInterval < _frameInterval) {
+        return;
+    }
+    _currentFrameInterval = 0;
     
-	CGContextRelease(effectInContext);
-	CGContextRelease(effectOutContext);
+    UIView *superview = self.superview;
+#ifdef DEBUG
+    NSParameterAssert(superview);
+    NSParameterAssert(self.window);
+    NSParameterAssert(_effectInContext);
+    NSParameterAssert(_effectOutContext);
+#endif
+    
+    CGContextRef effectInContext = CGContextRetain(_effectInContext);
+    CGContextRef effectOutContext = CGContextRetain(_effectOutContext);
+    vImage_Buffer effectInBuffer = _effectInBuffer;
+    vImage_Buffer effectOutBuffer = _effectOutBuffer;
+    
+    // Temporarily hide all other LFGlassViews in this superview to avoid recursive blurring
+    NSMutableArray<LFGlassView *> *hiddenBlurViews = [NSMutableArray array];
+    for (UIView *view in superview.subviews) {
+        if ([view isKindOfClass:[LFGlassView class]] && view != self && !view.hidden) {
+            view.hidden = YES;
+            [hiddenBlurViews addObject:(LFGlassView *)view];
+        }
+    }
+    
+    self.hidden = YES;
+    [superview.layer renderInContext:effectInContext];
+    self.hidden = NO;
+    
+    // Restore other blur views
+    for (LFGlassView *view in hiddenBlurViews) {
+        view.hidden = NO;
+    }
+    
+    uint32_t blurKernel = _precalculatedBlurKernel;
+    
+    vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    
+    CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
+    self.layer.contents = (__bridge id)(outImage);
+    CGImageRelease(outImage);
+    
+    CGContextRelease(effectInContext);
+    CGContextRelease(effectOutContext);
 }
+
 
 @end
