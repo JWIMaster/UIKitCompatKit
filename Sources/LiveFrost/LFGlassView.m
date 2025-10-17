@@ -262,59 +262,69 @@
 }
 
 - (void) recreateImageBuffers {
-	CGRect visibleRect = self.frame;
-	CGSize bufferSize = self.scaledSize;
-	if (bufferSize.width == 0.0 || bufferSize.height == 0.0) {
-		return;
-	}
-	
-	size_t bufferWidth = (size_t)rint(bufferSize.width);
-	size_t bufferHeight = (size_t)rint(bufferSize.height);
-	if (bufferWidth == 0) {
-		bufferWidth = 1;
-	}
-	if (bufferHeight == 0) {
-		bufferHeight = 1;
-	}
-	
-	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	
-	CGContextRef effectInContext = CGBitmapContextCreate(NULL, bufferWidth, bufferHeight, 8, bufferWidth * 8, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
-	
-	CGContextRef effectOutContext = CGBitmapContextCreate(NULL, bufferWidth, bufferHeight, 8, bufferWidth * 8, colorSpace, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
-	
-	CGColorSpaceRelease(colorSpace);
-	
-	CGContextConcatCTM(effectInContext, (CGAffineTransform){
-		1.0, 0.0, 0.0, -1.0, 0.0, bufferSize.height
-	});
-	CGContextScaleCTM(effectInContext, _scaleFactor, _scaleFactor);
-	CGContextTranslateCTM(effectInContext, -visibleRect.origin.x, -visibleRect.origin.y);
-	
-	if (_effectInContext) {
-		CGContextRelease(_effectInContext);
-	}
-	_effectInContext = effectInContext;
-	
-	if (_effectOutContext) {
-		CGContextRelease(_effectOutContext);
-	}
-	_effectOutContext = effectOutContext;
-	
-	_effectInBuffer = (vImage_Buffer){
-		.data = CGBitmapContextGetData(effectInContext),
-		.width = CGBitmapContextGetWidth(effectInContext),
-		.height = CGBitmapContextGetHeight(effectInContext),
-		.rowBytes = CGBitmapContextGetBytesPerRow(effectInContext)
-	};
-	
-	_effectOutBuffer = (vImage_Buffer){
-		.data = CGBitmapContextGetData(effectOutContext),
-		.width = CGBitmapContextGetWidth(effectOutContext),
-		.height = CGBitmapContextGetHeight(effectOutContext),
-		.rowBytes = CGBitmapContextGetBytesPerRow(effectOutContext)
-	};
+    CGRect visibleRect = self.bounds;
+    UIView *snapshotView = self.snapshotTargetView ?: self.superview;
+    if (!snapshotView) return;
+    
+    // Compute frame of self inside the snapshot target
+    CGRect targetFrame = [snapshotView convertRect:self.bounds fromView:self];
+    
+    CGSize bufferSize = self.scaledSize;
+    if (bufferSize.width == 0.0 || bufferSize.height == 0.0) return;
+    
+    size_t bufferWidth = (size_t)rint(bufferSize.width);
+    size_t bufferHeight = (size_t)rint(bufferSize.height);
+    bufferWidth = bufferWidth ?: 1;
+    bufferHeight = bufferHeight ?: 1;
+    
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    
+    CGContextRef effectInContext = CGBitmapContextCreate(NULL,
+                                                          bufferWidth,
+                                                          bufferHeight,
+                                                          8,
+                                                          bufferWidth * 4,
+                                                          colorSpace,
+                                                          kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+    
+    CGContextRef effectOutContext = CGBitmapContextCreate(NULL,
+                                                           bufferWidth,
+                                                           bufferHeight,
+                                                           8,
+                                                           bufferWidth * 4,
+                                                           colorSpace,
+                                                           kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+    
+    CGColorSpaceRelease(colorSpace);
+    
+    // Flip the context vertically
+    CGContextConcatCTM(effectInContext, (CGAffineTransform){1.0, 0.0, 0.0, -1.0, 0.0, bufferSize.height});
+    CGContextScaleCTM(effectInContext, _scaleFactor, _scaleFactor);
+    
+    // Translate context by the glass view's position in the snapshot target
+    CGContextTranslateCTM(effectInContext, -targetFrame.origin.x, -targetFrame.origin.y);
+    
+    if (_effectInContext) CGContextRelease(_effectInContext);
+    if (_effectOutContext) CGContextRelease(_effectOutContext);
+    
+    _effectInContext = effectInContext;
+    _effectOutContext = effectOutContext;
+    
+    _effectInBuffer = (vImage_Buffer){
+        .data = CGBitmapContextGetData(effectInContext),
+        .width = CGBitmapContextGetWidth(effectInContext),
+        .height = CGBitmapContextGetHeight(effectInContext),
+        .rowBytes = CGBitmapContextGetBytesPerRow(effectInContext)
+    };
+    
+    _effectOutBuffer = (vImage_Buffer){
+        .data = CGBitmapContextGetData(effectOutContext),
+        .width = CGBitmapContextGetWidth(effectOutContext),
+        .height = CGBitmapContextGetHeight(effectOutContext),
+        .rowBytes = CGBitmapContextGetBytesPerRow(effectOutContext)
+    };
 }
+
 
 - (void) forceRefresh {
 	_currentFrameInterval = _frameInterval - 1;
