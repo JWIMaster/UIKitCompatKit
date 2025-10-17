@@ -321,56 +321,57 @@
 	[self refresh];
 }
 
-- (void) refresh {
-    if (++_currentFrameInterval < _frameInterval) {
-        return;
-    }
+- (void)refresh {
+    if (++_currentFrameInterval < _frameInterval) return;
     _currentFrameInterval = 0;
-    
-    UIView *superview = self.snapshotTargetView ?: self.superview;
+
+    UIView *targetView = _snapshotTargetView ?: self.superview;
 #ifdef DEBUG
-    NSParameterAssert(superview);
+    NSParameterAssert(targetView);
     NSParameterAssert(self.window);
     NSParameterAssert(_effectInContext);
     NSParameterAssert(_effectOutContext);
 #endif
-    
+
+    // Compute the target frame relative to self
+    CGRect relativeFrame = [targetView convertRect:targetView.bounds toView:self];
+
     CGContextRef effectInContext = CGContextRetain(_effectInContext);
     CGContextRef effectOutContext = CGContextRetain(_effectOutContext);
     vImage_Buffer effectInBuffer = _effectInBuffer;
     vImage_Buffer effectOutBuffer = _effectOutBuffer;
-    
-    // Temporarily hide all other LFGlassViews in this superview to avoid recursive blurring
+
     NSMutableArray<LFGlassView *> *hiddenBlurViews = [NSMutableArray array];
-    for (UIView *view in superview.subviews) {
+    for (UIView *view in targetView.subviews) {
         if ([view isKindOfClass:[LFGlassView class]] && view != self && !view.hidden) {
             view.hidden = YES;
             [hiddenBlurViews addObject:(LFGlassView *)view];
         }
     }
-    
+
     self.hidden = YES;
-    [superview.layer renderInContext:effectInContext];
+    // Apply translation to align the target view correctly
+    CGContextSaveGState(effectInContext);
+    CGContextTranslateCTM(effectInContext, -relativeFrame.origin.x, -relativeFrame.origin.y);
+    [targetView.layer renderInContext:effectInContext];
+    CGContextRestoreGState(effectInContext);
     self.hidden = NO;
-    
-    // Restore other blur views
-    for (LFGlassView *view in hiddenBlurViews) {
-        view.hidden = NO;
-    }
-    
+
+    for (LFGlassView *view in hiddenBlurViews) view.hidden = NO;
+
     uint32_t blurKernel = _precalculatedBlurKernel;
-    
     vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    
+
     CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
-    
+
     CGContextRelease(effectInContext);
     CGContextRelease(effectOutContext);
 }
+
 
 
 @end
