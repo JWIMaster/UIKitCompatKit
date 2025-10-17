@@ -289,9 +289,7 @@
 		1.0, 0.0, 0.0, -1.0, 0.0, bufferSize.height
 	});
 	CGContextScaleCTM(effectInContext, _scaleFactor, _scaleFactor);
-    CGRect targetFrame = [self convertRect:self.bounds toView:self.snapshotTargetView ?: self.superview];
-    CGContextTranslateCTM(effectInContext, -targetFrame.origin.x, -targetFrame.origin.y);
-
+	CGContextTranslateCTM(effectInContext, -visibleRect.origin.x, -visibleRect.origin.y);
 	
 	if (_effectInContext) {
 		CGContextRelease(_effectInContext);
