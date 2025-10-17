@@ -324,7 +324,7 @@
     }
     _currentFrameInterval = 0;
     
-    UIView *superview = self.window;
+    UIView *superview = self.superview;
 #ifdef DEBUG
     NSParameterAssert(superview);
     NSParameterAssert(self.window);
