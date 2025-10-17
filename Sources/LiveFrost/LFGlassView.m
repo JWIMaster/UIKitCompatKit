@@ -356,7 +356,7 @@
         // Convert to the context’s coordinate space (flipped + scaled)
         CGRect clipRect = CGRectMake(
             frameInSuperview.origin.x * _scaleFactor,
-            (_superview.bounds.size.height - CGRectGetMaxY(frameInSuperview)) * _scaleFactor,
+            (superview.bounds.size.height - CGRectGetMaxY(frameInSuperview)) * _scaleFactor,
             frameInSuperview.size.width * _scaleFactor,
             frameInSuperview.size.height * _scaleFactor
         );
