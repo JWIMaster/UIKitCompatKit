@@ -327,7 +327,7 @@
     }
     _currentFrameInterval = 0;
     
-    UIView *superview = self.snapshotTargetView ?: self.superview;
+    UIView *superview = self.superview;
 #ifdef DEBUG
     NSParameterAssert(superview);
     NSParameterAssert(self.window);
