@@ -82,7 +82,7 @@
 }
 
 - (void) setup {
-	self.clipsToBounds = YES;
+	//self.clipsToBounds = YES;
 	self.blurRadius = 4.0f;
 	_backgroundColorLayer = [CALayer layer];
 	_backgroundColorLayer.actions = @{
