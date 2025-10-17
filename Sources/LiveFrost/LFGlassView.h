@@ -33,6 +33,8 @@
 
 @property (nonatomic, assign) NSUInteger frameInterval;
 
+@property (nonatomic, weak) UIView *snapshotTargetView;
+
 @property (nonatomic, assign, getter=isLiveBlurring) BOOL liveBlurring;
 
 - (BOOL) blurOnceIfPossible;
