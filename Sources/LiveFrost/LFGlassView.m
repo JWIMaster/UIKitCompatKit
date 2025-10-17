@@ -336,8 +336,19 @@
     CGContextRef effectOutContext = CGContextRetain(_effectOutContext);
     vImage_Buffer effectInBuffer = _effectInBuffer;
     vImage_Buffer effectOutBuffer = _effectOutBuffer;
-    
-    // Temporarily hide all other LFGlassViews in this superview to avoid recursive blurring
+
+    // ✅ Clip to rounded rect before rendering
+    if (self.layer.cornerRadius > 0.0) {
+        CGRect pathRect = CGRectMake(0, 0, CGBitmapContextGetWidth(effectInContext), CGBitmapContextGetHeight(effectInContext));
+        CGFloat radius = self.layer.cornerRadius * _scaleFactor;
+        CGMutablePathRef path = CGPathCreateMutable();
+        CGPathAddRoundedRect(path, NULL, pathRect, radius, radius);
+        CGContextAddPath(effectInContext, path);
+        CGContextClip(effectInContext);
+        CGPathRelease(path);
+    }
+
+    // Temporarily hide other glass views
     NSMutableArray<LFGlassView *> *hiddenBlurViews = [NSMutableArray array];
     for (UIView *view in superview.subviews) {
         if ([view isKindOfClass:[LFGlassView class]] && view != self && !view.hidden) {
@@ -345,29 +356,29 @@
             [hiddenBlurViews addObject:(LFGlassView *)view];
         }
     }
-    
+
     self.hidden = YES;
     [superview.layer renderInContext:effectInContext];
     self.hidden = NO;
-    
-    // Restore other blur views
+
     for (LFGlassView *view in hiddenBlurViews) {
         view.hidden = NO;
     }
-    
+
     uint32_t blurKernel = _precalculatedBlurKernel;
-    
+
     vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&effectOutBuffer, &effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&effectInBuffer, &effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    
+
     CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
-    
+
     CGContextRelease(effectInContext);
     CGContextRelease(effectOutContext);
 }
+
 
 
 @end
