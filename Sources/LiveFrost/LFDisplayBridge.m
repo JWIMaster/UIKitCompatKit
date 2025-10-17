@@ -57,7 +57,7 @@ void LF_refreshAllSubscribedViewsApplierFunction(const void *value, void *contex
 	if (self = [super init]) {
 		_subscribedViews = CFSetCreateMutable(kCFAllocatorDefault, 0, NULL);
 		_displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleDisplayLink:)];
-		[_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+		[_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
 	}
 	return self;
 }
