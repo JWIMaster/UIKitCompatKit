@@ -24,7 +24,6 @@
 
 #import "LFGlassView.h"
 #import "LFDisplayBridge.h"
-#import "UIViewHelper.h"
 
 @interface LFGlassView () <LFDisplayBridgeTriggering>
 
@@ -328,7 +327,7 @@
     }
     _currentFrameInterval = 0;
     
-    UIView *superview = [self rootView];
+    UIView *superview = self.superview;
 #ifdef DEBUG
     NSParameterAssert(superview);
     NSParameterAssert(self.window);
