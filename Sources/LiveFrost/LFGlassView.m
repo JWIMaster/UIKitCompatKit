@@ -318,7 +318,7 @@
 	[self refresh];
 }
 
-- (void) refresh {
+- (void)refresh {
     if (++_currentFrameInterval < _frameInterval) {
         return;
     }
@@ -347,6 +347,29 @@
     }
     
     self.hidden = YES;
+    
+    // --- ✅ Rounded blur patch begins here ---
+    if (self.layer.cornerRadius > 0.0) {
+        // Convert our frame to window coordinates (since renderInContext uses global space)
+        CGRect frameInSuperview = [self.superview convertRect:self.frame toView:nil];
+        
+        // Convert to the context’s coordinate space (flipped + scaled)
+        CGRect clipRect = CGRectMake(
+            frameInSuperview.origin.x * _scaleFactor,
+            (_superview.bounds.size.height - CGRectGetMaxY(frameInSuperview)) * _scaleFactor,
+            frameInSuperview.size.width * _scaleFactor,
+            frameInSuperview.size.height * _scaleFactor
+        );
+        
+        CGFloat radius = self.layer.cornerRadius * _scaleFactor;
+        CGMutablePathRef path = CGPathCreateMutable();
+        CGPathAddRoundedRect(path, NULL, clipRect, radius, radius);
+        CGContextAddPath(effectInContext, path);
+        CGContextClip(effectInContext);
+        CGPathRelease(path);
+    }
+    // --- ✅ Rounded blur patch ends here ---
+    
     [superview.layer renderInContext:effectInContext];
     self.hidden = NO;
     
@@ -368,6 +391,7 @@
     CGContextRelease(effectInContext);
     CGContextRelease(effectOutContext);
 }
+
 
 
 @end
