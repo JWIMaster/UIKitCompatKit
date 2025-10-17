@@ -84,7 +84,6 @@
 - (void) setup {
 	self.clipsToBounds = YES;
 	self.blurRadius = 4.0f;
-    self.layer.cornerRadius = 12;
 	_backgroundColorLayer = [CALayer layer];
 	_backgroundColorLayer.actions = @{
 		@"backgroundColor": [NSNull null],
