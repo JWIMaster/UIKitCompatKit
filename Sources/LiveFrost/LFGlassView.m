@@ -282,14 +282,21 @@
     // Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // Set up transform: scale + translate so that renderInContext draws the correct area
+    // Set up transform: flip vertically, then scale, then translate
     CGContextSaveGState(_effectInContext);
-    CGContextScaleCTM(_effectInContext, _scaleFactor, _scaleFactor);
+
+    // Flip Y-axis
+    CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
+    CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
+
+    // Translate so we capture the correct area
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    // Render targetView hierarchy
+    // Render targetView
     [targetView.layer renderInContext:_effectInContext];
+
     CGContextRestoreGState(_effectInContext);
+
 
     self.hidden = NO;
 
