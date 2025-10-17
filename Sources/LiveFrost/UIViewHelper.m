@@ -4,7 +4,9 @@
 
 - (UIView *)rootView {
     if (self.superview) {
+        printf("%s", self.superview);
         return [self.superview rootView];
+        
     }
     return self;
 }
