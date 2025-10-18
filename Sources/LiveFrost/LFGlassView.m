@@ -22,6 +22,7 @@
 
 @property (nonatomic, assign, readonly) BOOL shouldLiveBlur;
 @property (nonatomic, assign, readonly) NSUInteger currentFrameInterval;
+@property (nonatomic, assign) BOOL hasBlurredOnce;
 
 @property (nonatomic, strong, readonly) CALayer *backgroundColorLayer;
 @property (nonatomic, assign) CGFloat rawBlurRadius;
@@ -167,9 +168,21 @@
 
 - (void)didMoveToWindow {
     [super didMoveToWindow];
+
     if (self.window) {
-        [self startLiveBlurringIfReady];
+        // Perform one-time blur if not done yet
+        if (!_hasBlurredOnce) {
+            [self blurOnceIfPossible];
+            _hasBlurredOnce = YES;
+        }
+
+        // Start live blur if enabled
+        if (self.liveBlurring) {
+            [self startLiveBlurringIfReady];
+        }
+
     } else {
+        // Stop live blur when removed from window
         [self stopLiveBlurring];
     }
 }
