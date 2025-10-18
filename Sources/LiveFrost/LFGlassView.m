@@ -274,12 +274,19 @@
     if (!targetView || !self.window) return;
 
     CGSize scaledSize = self.scaledSize;
-    
+    if (scaledSize.width <= 0 || scaledSize.height <= 0) return; // prevent invalid size
+
     // Hide self temporarily
     self.hidden = YES;
 
     // Calculate self.bounds in targetView coordinates
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
+
+    // Only clear and render if context exists
+    if (!_effectInContext) {
+        self.hidden = NO;
+        return;
+    }
 
     // Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
@@ -299,20 +306,24 @@
 
     CGContextRestoreGState(_effectInContext);
 
-
     self.hidden = NO;
 
-    // Apply box blur
-    uint32_t blurKernel = _precalculatedBlurKernel;
-    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    // Only apply blur if buffers are valid
+    if (_effectInBuffer.data && _effectOutBuffer.data) {
+        uint32_t blurKernel = _precalculatedBlurKernel;
+        vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+        vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+        vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    }
 
-    // Commit to layer
-    CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
-    self.layer.contents = (__bridge id)(outImage);
-    CGImageRelease(outImage);
+    // Commit to layer if context exists
+    if (_effectOutContext) {
+        CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
+        self.layer.contents = (__bridge id)(outImage);
+        CGImageRelease(outImage);
+    }
 }
+
 
 
 @end
