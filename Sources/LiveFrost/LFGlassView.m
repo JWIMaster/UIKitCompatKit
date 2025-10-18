@@ -6,6 +6,7 @@
 
 #import "LFGlassView.h"
 #import "LFDisplayBridge.h"
+#import "LFGlassSnapshotManager.h"
 
 @interface LFGlassView () <LFDisplayBridgeTriggering>
 
@@ -273,7 +274,12 @@
     if (!targetView || !self.window) return;
 
     CGSize scaledSize = self.scaledSize;
-    
+    if (scaledSize.width == 0 || scaledSize.height == 0) return;
+
+    // Get shared snapshot
+    CGImageRef sharedSnapshot = [[LFGlassSnapshotManager sharedManager] snapshotForTargetView:targetView];
+    if (!sharedSnapshot) return;
+
     // Hide self temporarily
     self.hidden = YES;
 
@@ -283,21 +289,17 @@
     // Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // Set up transform: flip vertically, then scale, then translate
     CGContextSaveGState(_effectInContext);
 
-    // Flip Y-axis
+    // Flip Y-axis, scale, then translate to capture correct area
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
     CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
-
-    // Translate so we capture the correct area
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    // Render targetView
-    [targetView.layer renderInContext:_effectInContext];
+    // Draw shared snapshot instead of rendering target view
+    CGContextDrawImage(_effectInContext, CGRectMake(0, 0, targetView.bounds.size.width, targetView.bounds.size.height), sharedSnapshot);
 
     CGContextRestoreGState(_effectInContext);
-
 
     self.hidden = NO;
 
@@ -312,6 +314,7 @@
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
+
 
 
 @end
