@@ -301,16 +301,21 @@
 
     self.hidden = NO;
 
-    // Apply box blur
-    uint32_t blurKernel = _precalculatedBlurKernel;
-    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+            uint32_t blurKernel = _precalculatedBlurKernel;
 
-    // Commit to layer
-    CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
-    self.layer.contents = (__bridge id)(outImage);
-    CGImageRelease(outImage);
+            vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+            vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+            vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+
+            CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
+
+            // Update layer on main thread
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.layer.contents = (__bridge id)outImage;
+                CGImageRelease(outImage);
+            });
+        });
 }
 
 
