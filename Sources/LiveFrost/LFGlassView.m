@@ -17,7 +17,7 @@
 
 @property (nonatomic, assign, readonly) vImage_Buffer effectInBuffer;
 @property (nonatomic, assign, readonly) vImage_Buffer effectOutBuffer;
-
+@property (nonatomic, assign) CGSize effectInSize; 
 @property (nonatomic, assign, readonly) uint32_t precalculatedBlurKernel;
 
 @property (nonatomic, assign, readonly) BOOL shouldLiveBlur;
@@ -266,8 +266,18 @@
     [self refresh];
 }
 
-
 - (void)ensureContextForSize:(CGSize)size {
+    // Clamp size to at least 1x1
+    size.width = MAX(size.width, 1);
+    size.height = MAX(size.height, 1);
+
+    if (_effectInContext &&
+        CGSizeEqualToSize(_effectInSize, size)) {
+        return;
+    }
+
+    _effectInSize = size;
+
     if (_effectInContext) {
         CGContextRelease(_effectInContext);
         _effectInContext = NULL;
@@ -277,18 +287,19 @@
         _effectOutContext = NULL;
     }
 
-    size_t width = (size_t)size.width;
-    size_t height = (size_t)size.height;
+    size_t width = (size_t)ceil(size.width);
+    size_t height = (size_t)ceil(size.height);
     size_t bytesPerRow = width * 4;
 
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-
     _effectInContext = CGBitmapContextCreate(NULL, width, height, 8, bytesPerRow, colorSpace, kCGImageAlphaPremultipliedFirst);
     _effectOutContext = CGBitmapContextCreate(NULL, width, height, 8, bytesPerRow, colorSpace, kCGImageAlphaPremultipliedFirst);
-
     CGColorSpaceRelease(colorSpace);
 
-    // Link vImage buffers to contexts
+    if (!_effectInContext || !_effectOutContext) {
+        NSLog(@"Failed to create bitmap contexts for size: %@", NSStringFromCGSize(size));
+    }
+
     _effectInBuffer.data = CGBitmapContextGetData(_effectInContext);
     _effectInBuffer.width = (vImagePixelCount)width;
     _effectInBuffer.height = (vImagePixelCount)height;
@@ -308,18 +319,18 @@
     if (!targetView || !self.window) return;
 
     CGSize scaledSize = self.scaledSize;
+    NSLog(@"Refreshing blur with scaledSize: %@", NSStringFromCGSize(scaledSize));
     [self ensureContextForSize:scaledSize];
 
-    // Make sure context exists and has non-zero size
-    if (!_effectInContext || !_effectOutContext ||
-        scaledSize.width <= 0 || scaledSize.height <= 0) {
-        NSLog(@"Skipping refresh due to invalid size: %@", NSStringFromCGSize(scaledSize));
-        return; // early exit if context not ready or zero size
+    if (!_effectInContext || !_effectOutContext) {
+        NSLog(@"Skipping refresh: invalid contexts");
+        return;
     }
 
+    // Hide temporarily
     self.hidden = YES;
-    CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
+    CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
     CGContextSaveGState(_effectInContext);
@@ -332,7 +343,7 @@
     } @catch (NSException *exception) {
         CGContextRestoreGState(_effectInContext);
         self.hidden = NO;
-        NSLog(@"renderInContext crashed for size: %@", NSStringFromCGSize(scaledSize));
+        NSLog(@"renderInContext crashed for size: %@, exception: %@", NSStringFromCGSize(scaledSize), exception);
         return;
     }
 
