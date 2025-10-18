@@ -17,7 +17,7 @@
 
 @property (nonatomic, assign, readonly) vImage_Buffer effectInBuffer;
 @property (nonatomic, assign, readonly) vImage_Buffer effectOutBuffer;
-@property (nonatomic, assign) CGSize effectInSize; 
+
 @property (nonatomic, assign, readonly) uint32_t precalculatedBlurKernel;
 
 @property (nonatomic, assign, readonly) BOOL shouldLiveBlur;
@@ -266,51 +266,6 @@
     [self refresh];
 }
 
-- (void)ensureContextForSize:(CGSize)size {
-    // Clamp size to at least 1x1
-    size.width = MAX(size.width, 1);
-    size.height = MAX(size.height, 1);
-
-    if (_effectInContext &&
-        CGSizeEqualToSize(_effectInSize, size)) {
-        return;
-    }
-
-    _effectInSize = size;
-
-    if (_effectInContext) {
-        CGContextRelease(_effectInContext);
-        _effectInContext = NULL;
-    }
-    if (_effectOutContext) {
-        CGContextRelease(_effectOutContext);
-        _effectOutContext = NULL;
-    }
-
-    size_t width = (size_t)ceil(size.width);
-    size_t height = (size_t)ceil(size.height);
-    size_t bytesPerRow = width * 4;
-
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    _effectInContext = CGBitmapContextCreate(NULL, width, height, 8, bytesPerRow, colorSpace, kCGImageAlphaPremultipliedFirst);
-    _effectOutContext = CGBitmapContextCreate(NULL, width, height, 8, bytesPerRow, colorSpace, kCGImageAlphaPremultipliedFirst);
-    CGColorSpaceRelease(colorSpace);
-
-    if (!_effectInContext || !_effectOutContext) {
-        NSLog(@"Failed to create bitmap contexts for size: %@", NSStringFromCGSize(size));
-    }
-
-    _effectInBuffer.data = CGBitmapContextGetData(_effectInContext);
-    _effectInBuffer.width = (vImagePixelCount)width;
-    _effectInBuffer.height = (vImagePixelCount)height;
-    _effectInBuffer.rowBytes = bytesPerRow;
-
-    _effectOutBuffer.data = CGBitmapContextGetData(_effectOutContext);
-    _effectOutBuffer.width = (vImagePixelCount)width;
-    _effectOutBuffer.height = (vImagePixelCount)height;
-    _effectOutBuffer.rowBytes = bytesPerRow;
-}
-
 - (void)refresh {
     if (++_currentFrameInterval < _frameInterval) return;
     _currentFrameInterval = 0;
@@ -319,47 +274,46 @@
     if (!targetView || !self.window) return;
 
     CGSize scaledSize = self.scaledSize;
-    NSLog(@"Refreshing blur with scaledSize: %@", NSStringFromCGSize(scaledSize));
-    [self ensureContextForSize:scaledSize];
-
-    if (!_effectInContext || !_effectOutContext) {
-        NSLog(@"Skipping refresh: invalid contexts");
-        return;
-    }
-
-    // Hide temporarily
+    
+    // Hide self temporarily
     self.hidden = YES;
 
+    // Calculate self.bounds in targetView coordinates
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
+
+    // Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
+    // Set up transform: flip vertically, then scale, then translate
     CGContextSaveGState(_effectInContext);
+
+    // Flip Y-axis
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
-    CGContextScaleCTM(_effectInContext, 1.0, -1.0);
+    CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
+
+    // Translate so we capture the correct area
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    @try {
-        [targetView.layer renderInContext:_effectInContext];
-    } @catch (NSException *exception) {
-        CGContextRestoreGState(_effectInContext);
-        self.hidden = NO;
-        NSLog(@"renderInContext crashed for size: %@, exception: %@", NSStringFromCGSize(scaledSize), exception);
-        return;
-    }
+    // Render targetView
+    [targetView.layer renderInContext:_effectInContext];
+
 
     CGContextRestoreGState(_effectInContext);
+
+
     self.hidden = NO;
 
+    // Apply box blur
     uint32_t blurKernel = _precalculatedBlurKernel;
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 
+    // Commit to layer
     CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
-
 
 
 @end
