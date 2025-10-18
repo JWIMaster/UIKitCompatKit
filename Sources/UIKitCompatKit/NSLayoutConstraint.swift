@@ -75,11 +75,6 @@ public extension UIView {
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var rightAnchor: Anchor { Anchor(view: self, attribute: .right) }
-    
-    @available(iOS, introduced: 1.0, deprecated: 2.0, message: "Beware. The cookywookywoo is a powerful string indeed. Use sparingly. (On a real note, this is just my package testing string since I replicate so many API's it's hard to tell who's implementation the app is choosing to use.")
-    var cookywookywoo: String {
-        "dingdongbingbong, bingbongdingdong"
-    }
 }
 
 // MARK: - NSLayoutConstraint isActive Backport
@@ -89,19 +84,16 @@ private let activeConstraints: NSHashTable = NSHashTable<AnyObject>(options: .we
 
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
 public extension NSLayoutConstraint {
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var firstAnchor: Anchor? {
         get { objc_getAssociatedObject(self, &firstAnchorKey) as? Anchor }
         set { objc_setAssociatedObject(self, &firstAnchorKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
     
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var secondAnchor: Anchor? {
         get { objc_getAssociatedObject(self, &secondAnchorKey) as? Anchor }
         set { objc_setAssociatedObject(self, &secondAnchorKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
     
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var isActive: Bool {
         get {
             return activeConstraints.contains(self)
@@ -109,13 +101,22 @@ public extension NSLayoutConstraint {
         set {
             guard let firstView = firstItem as? UIView else { return }
             firstView.translatesAutoresizingMaskIntoConstraints = false
+            
             if newValue {
-                if let superview = firstView.superview, !superview.constraints.contains(self) {
-                    superview.addConstraint(self)
+                // Special handling for UIStackView arrangedSubviews
+                if let stack = firstView.superview as? UIStackView, stack.arrangedSubviews.contains(firstView) {
+                    // Add constraint to the view itself
+                    firstView.addConstraint(self)
+                } else {
+                    if let superview = firstView.superview, !superview.constraints.contains(self) {
+                        superview.addConstraint(self)
+                    }
                 }
                 activeConstraints.add(self)
             } else {
-                if let superview = firstView.superview {
+                if let stack = firstView.superview as? UIStackView, stack.arrangedSubviews.contains(firstView) {
+                    firstView.removeConstraint(self)
+                } else if let superview = firstView.superview {
                     superview.removeConstraint(self)
                 }
                 activeConstraints.remove(self)
@@ -123,14 +124,10 @@ public extension NSLayoutConstraint {
         }
     }
     
-    // MARK: - Correct signatures (match UIKit)
-    
-    @available(iOS, introduced: 6.0, obsoleted: 8.0)
     class func activate(_ constraints: [NSLayoutConstraint]) {
         for c in constraints { c.isActive = true }
     }
     
-    @available(iOS, introduced: 6.0, obsoleted: 8.0)
     class func deactivate(_ constraints: [NSLayoutConstraint]) {
         for c in constraints { c.isActive = false }
     }
