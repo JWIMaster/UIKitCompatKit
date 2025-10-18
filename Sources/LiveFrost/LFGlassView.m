@@ -298,7 +298,12 @@
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
     // Render targetView
-    [targetView.layer renderInContext:_effectInContext];
+    @try {
+        [targetView.layer renderInContext:_effectInContext];
+    } @catch (NSException *exception) {
+        NSLog(@"renderInContext failed: %@", exception);
+        return;
+    }
 
 
     CGContextRestoreGState(_effectInContext);
