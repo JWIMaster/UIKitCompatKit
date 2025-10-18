@@ -274,7 +274,11 @@
     if (!targetView || !self.window) return;
 
     CGSize scaledSize = self.scaledSize;
-    if (scaledSize.width <= 0 || scaledSize.height <= 0) return; // prevent invalid size
+
+    // Skip if size is invalid
+    if (scaledSize.width <= 0 || scaledSize.height <= 0) {
+        return;
+    }
 
     // Hide self temporarily
     self.hidden = YES;
@@ -282,14 +286,12 @@
     // Calculate self.bounds in targetView coordinates
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
-    // Only clear and render if context exists
-    if (!_effectInContext) {
-        self.hidden = NO;
-        return;
+    // Clear previous contents if context exists
+    if (_effectInContext) {
+        CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
+    } else {
+        return; // skip if context is nil
     }
-
-    // Clear previous contents
-    CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
     // Set up transform: flip vertically, then scale, then translate
     CGContextSaveGState(_effectInContext);
@@ -301,26 +303,33 @@
     // Translate so we capture the correct area
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    // Render targetView
-    [targetView.layer renderInContext:_effectInContext];
+    // Render targetView safely
+    @try {
+        [targetView.layer renderInContext:_effectInContext];
+    } @catch (NSException *exception) {
+        // Skip rendering if renderInContext fails
+        CGContextRestoreGState(_effectInContext);
+        self.hidden = NO;
+        return;
+    }
 
     CGContextRestoreGState(_effectInContext);
 
     self.hidden = NO;
 
-    // Only apply blur if buffers are valid
-    if (_effectInBuffer.data && _effectOutBuffer.data) {
-        uint32_t blurKernel = _precalculatedBlurKernel;
-        vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-        vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-        vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    }
+    // Apply box blur
+    uint32_t blurKernel = _precalculatedBlurKernel;
+    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 
-    // Commit to layer if context exists
+    // Commit to layer
     if (_effectOutContext) {
         CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
-        self.layer.contents = (__bridge id)(outImage);
-        CGImageRelease(outImage);
+        if (outImage) {
+            self.layer.contents = (__bridge id)(outImage);
+            CGImageRelease(outImage);
+        }
     }
 }
 
