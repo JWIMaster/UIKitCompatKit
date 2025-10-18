@@ -62,6 +62,7 @@
     self.opaque = NO;
     self.userInteractionEnabled = NO;
     self.layer.actions = @{@"contents": [NSNull null]};
+    self.layer.drawsAsynchronously = YES;
     _shouldLiveBlur = YES;
     _frameInterval = 1;
     _currentFrameInterval = 0;
