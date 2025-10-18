@@ -272,6 +272,8 @@
 
     UIView *targetView = self.snapshotTargetView ?: self.superview;
     if (!targetView || !self.window) return;
+    if (!targetView || !targetView.window) return;
+    if (CGRectIsEmpty(targetView.bounds)) return;
 
     CGSize scaledSize = self.scaledSize;
     
