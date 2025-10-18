@@ -266,6 +266,7 @@
     [self refresh];
 }
 
+
 - (void)ensureContextForSize:(CGSize)size {
     if (_effectInContext) {
         CGContextRelease(_effectInContext);
@@ -307,28 +308,35 @@
     if (!targetView || !self.window) return;
 
     CGSize scaledSize = self.scaledSize;
-
-    // Make sure contexts match size
     [self ensureContextForSize:scaledSize];
 
-    if (!_effectInContext || !_effectOutContext) return; // <-- prevent crash
+    // Make sure context exists and has non-zero size
+    if (!_effectInContext || !_effectOutContext ||
+        scaledSize.width <= 0 || scaledSize.height <= 0) {
+        NSLog(@"Skipping refresh due to invalid size: %@", NSStringFromCGSize(scaledSize));
+        return; // early exit if context not ready or zero size
+    }
 
-    // Hide self temporarily
     self.hidden = YES;
-
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
     CGContextSaveGState(_effectInContext);
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
-    CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
+    CGContextScaleCTM(_effectInContext, 1.0, -1.0);
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    [targetView.layer renderInContext:_effectInContext];
+    @try {
+        [targetView.layer renderInContext:_effectInContext];
+    } @catch (NSException *exception) {
+        CGContextRestoreGState(_effectInContext);
+        self.hidden = NO;
+        NSLog(@"renderInContext crashed for size: %@", NSStringFromCGSize(scaledSize));
+        return;
+    }
 
     CGContextRestoreGState(_effectInContext);
-
     self.hidden = NO;
 
     uint32_t blurKernel = _precalculatedBlurKernel;
