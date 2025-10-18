@@ -266,6 +266,39 @@
     [self refresh];
 }
 
+- (void)ensureContextForSize:(CGSize)size {
+    if (_effectInContext) {
+        CGContextRelease(_effectInContext);
+        _effectInContext = NULL;
+    }
+    if (_effectOutContext) {
+        CGContextRelease(_effectOutContext);
+        _effectOutContext = NULL;
+    }
+
+    size_t width = (size_t)size.width;
+    size_t height = (size_t)size.height;
+    size_t bytesPerRow = width * 4;
+
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+
+    _effectInContext = CGBitmapContextCreate(NULL, width, height, 8, bytesPerRow, colorSpace, kCGImageAlphaPremultipliedFirst);
+    _effectOutContext = CGBitmapContextCreate(NULL, width, height, 8, bytesPerRow, colorSpace, kCGImageAlphaPremultipliedFirst);
+
+    CGColorSpaceRelease(colorSpace);
+
+    // Link vImage buffers to contexts
+    _effectInBuffer.data = CGBitmapContextGetData(_effectInContext);
+    _effectInBuffer.width = (vImagePixelCount)width;
+    _effectInBuffer.height = (vImagePixelCount)height;
+    _effectInBuffer.rowBytes = bytesPerRow;
+
+    _effectOutBuffer.data = CGBitmapContextGetData(_effectOutContext);
+    _effectOutBuffer.width = (vImagePixelCount)width;
+    _effectOutBuffer.height = (vImagePixelCount)height;
+    _effectOutBuffer.rowBytes = bytesPerRow;
+}
+
 - (void)refresh {
     if (++_currentFrameInterval < _frameInterval) return;
     _currentFrameInterval = 0;
@@ -274,46 +307,40 @@
     if (!targetView || !self.window) return;
 
     CGSize scaledSize = self.scaledSize;
-    
+
+    // Make sure contexts match size
+    [self ensureContextForSize:scaledSize];
+
+    if (!_effectInContext || !_effectOutContext) return; // <-- prevent crash
+
     // Hide self temporarily
     self.hidden = YES;
 
-    // Calculate self.bounds in targetView coordinates
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
-    // Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // Set up transform: flip vertically, then scale, then translate
     CGContextSaveGState(_effectInContext);
-
-    // Flip Y-axis
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
     CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
-
-    // Translate so we capture the correct area
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    // Render targetView
     [targetView.layer renderInContext:_effectInContext];
-
 
     CGContextRestoreGState(_effectInContext);
 
-
     self.hidden = NO;
 
-    // Apply box blur
     uint32_t blurKernel = _precalculatedBlurKernel;
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 
-    // Commit to layer
     CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
+
 
 
 @end
