@@ -274,6 +274,7 @@
     if (!targetView || !self.window) return;
     if (!targetView || !targetView.window) return;
     if (CGRectIsEmpty(targetView.bounds)) return;
+    NSLog(@"Refreshing blur with targetView size: %@", NSStringFromCGRect(targetView.bounds));
 
     CGSize scaledSize = self.scaledSize;
     
