@@ -108,8 +108,10 @@ public extension NSLayoutConstraint {
             guard let firstView = firstItem as? UIView else { return }
             firstView.translatesAutoresizingMaskIntoConstraints = false
 
+            let toItemView = secondItem as? UIView
+
             if newValue {
-                if toItem == nil {
+                if toItemView == nil {
                     // Constant constraint — add to the view itself
                     if !firstView.constraints.contains(self) {
                         firstView.addConstraint(self)
@@ -122,7 +124,7 @@ public extension NSLayoutConstraint {
                 }
                 activeConstraints.add(self)
             } else {
-                if toItem == nil {
+                if toItemView == nil {
                     firstView.removeConstraint(self)
                 } else if let superview = firstView.superview {
                     superview.removeConstraint(self)
