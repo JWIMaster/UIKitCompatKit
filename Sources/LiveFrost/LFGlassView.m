@@ -23,7 +23,6 @@
 @property (nonatomic, assign, readonly) BOOL shouldLiveBlur;
 @property (nonatomic, assign, readonly) NSUInteger currentFrameInterval;
 
-@property (nonatomic, assign) BOOL hasBlurredOnce;
 
 @property (nonatomic, strong, readonly) CALayer *backgroundColorLayer;
 @property (nonatomic, assign) CGFloat rawBlurRadius;
@@ -74,16 +73,6 @@
     if (_effectInContext) CGContextRelease(_effectInContext);
     if (_effectOutContext) CGContextRelease(_effectOutContext);
     [self stopLiveBlurring];
-}
-
-
-- (void)layoutSubviews {
-    [super layoutSubviews];
-
-    if (!_hasBlurredOnce && !CGRectIsEmpty(self.bounds)) {
-        [self blurOnceIfPossible];
-        _hasBlurredOnce = YES;
-    }
 }
 
 #pragma mark - Public properties
