@@ -103,25 +103,35 @@ public extension NSLayoutConstraint {
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var isActive: Bool {
-        get {
-            return activeConstraints.contains(self)
-        }
+        get { activeConstraints.contains(self) }
         set {
             guard let firstView = firstItem as? UIView else { return }
             firstView.translatesAutoresizingMaskIntoConstraints = false
+
             if newValue {
-                if let superview = firstView.superview, !superview.constraints.contains(self) {
-                    superview.addConstraint(self)
+                if toItem == nil {
+                    // Constant constraint — add to the view itself
+                    if !firstView.constraints.contains(self) {
+                        firstView.addConstraint(self)
+                    }
+                } else {
+                    // Normal constraint — add to superview
+                    if let superview = firstView.superview, !superview.constraints.contains(self) {
+                        superview.addConstraint(self)
+                    }
                 }
                 activeConstraints.add(self)
             } else {
-                if let superview = firstView.superview {
+                if toItem == nil {
+                    firstView.removeConstraint(self)
+                } else if let superview = firstView.superview {
                     superview.removeConstraint(self)
                 }
                 activeConstraints.remove(self)
             }
         }
     }
+
     
     // MARK: - Correct signatures (match UIKit)
     
