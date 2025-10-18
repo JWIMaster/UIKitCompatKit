@@ -273,40 +273,37 @@
     UIView *targetView = self.snapshotTargetView ?: self.superview;
     if (!targetView || !self.window) return;
 
-    CGSize size = self.bounds.size;
-    if (size.width <= 0 || size.height <= 0) return;
-
+    CGSize scaledSize = self.scaledSize;
+    
     // Hide self temporarily
     self.hidden = YES;
 
-    // Clear context
-    if (!_effectInContext) return;
-
-    CGContextClearRect(_effectInContext, CGRectMake(0, 0, size.width, size.height));
-
-    // Calculate rect in targetView
+    // Calculate self.bounds in targetView coordinates
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
+    // Clear previous contents
+    CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
+
+    // Set up transform: flip vertically, then scale, then translate
     CGContextSaveGState(_effectInContext);
 
-    // Translate to capture correct area
+    // Flip Y-axis
+    CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
+    CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
+
+    // Translate so we capture the correct area
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    // Iterate sublayers manually, skipping unsupported types
-    for (CALayer *layer in targetView.layer.sublayers) {
-        // Skip UITextTiledLayer or any unknown/private layers
-        NSString *className = NSStringFromClass([layer class]);
-        if ([className containsString:@"TiledLayer"]) continue;
-        if ([className containsString:@"UIText"]) continue;
+    // Render targetView
+    [targetView.layer renderInContext:_effectInContext];
 
-        [layer renderInContext:_effectInContext];
-    }
 
     CGContextRestoreGState(_effectInContext);
 
+
     self.hidden = NO;
 
-    // Apply box blur (same as before)
+    // Apply box blur
     uint32_t blurKernel = _precalculatedBlurKernel;
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
@@ -317,7 +314,6 @@
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
-
 
 
 @end
