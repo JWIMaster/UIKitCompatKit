@@ -6,15 +6,13 @@ public class Anchor {
     weak var view: UIView?
     let attribute: NSLayoutConstraint.Attribute
     
-    public init(view: UIView, attribute: NSLayoutConstraint.Attribute) {
+    init(view: UIView, attribute: NSLayoutConstraint.Attribute) {
         self.view = view
         self.attribute = attribute
     }
     
-    public func constraint(equalTo other: Anchor,
-                           multiplier: CGFloat = 1.0,
-                           constant: CGFloat = 0) -> NSLayoutConstraint {
-        let constraint = NSLayoutConstraint(
+    func constraint(equalTo other: Anchor, multiplier: CGFloat = 1.0, constant: CGFloat = 0) -> NSLayoutConstraint {
+        return NSLayoutConstraint(
             item: view!,
             attribute: attribute,
             relatedBy: .equal,
@@ -23,13 +21,10 @@ public class Anchor {
             multiplier: multiplier,
             constant: constant
         )
-        constraint.firstAnchor = self
-        constraint.secondAnchor = other
-        return constraint
     }
     
-    public func constraint(equalToConstant constant: CGFloat) -> NSLayoutConstraint {
-        let constraint = NSLayoutConstraint(
+    func constraint(equalToConstant constant: CGFloat) -> NSLayoutConstraint {
+        return NSLayoutConstraint(
             item: view!,
             attribute: attribute,
             relatedBy: .equal,
@@ -38,70 +33,28 @@ public class Anchor {
             multiplier: 1,
             constant: constant
         )
-        constraint.firstAnchor = self
-        constraint.secondAnchor = nil
-        return constraint
     }
 }
 
 // MARK: - UIView extension using safe internal anchors
+@available(iOS, introduced: 6.0, obsoleted: 9.0)
 public extension UIView {
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
-    var leadingAnchor: Anchor { Anchor(view: self, attribute: .leading) }
-    
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
-    var trailingAnchor: Anchor { Anchor(view: self, attribute: .trailing) }
-    
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
-    var topAnchor: Anchor { Anchor(view: self, attribute: .top) }
-    
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
-    var bottomAnchor: Anchor { Anchor(view: self, attribute: .bottom) }
-    
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
-    var widthAnchor: Anchor { Anchor(view: self, attribute: .width) }
-    
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
-    var heightAnchor: Anchor { Anchor(view: self, attribute: .height) }
-    
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
-    var centerXAnchor: Anchor { Anchor(view: self, attribute: .centerX) }
-    
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
-    var centerYAnchor: Anchor { Anchor(view: self, attribute: .centerY) }
-    
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
-    var leftAnchor: Anchor { Anchor(view: self, attribute: .left) }
-    
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
-    var rightAnchor: Anchor { Anchor(view: self, attribute: .right) }
-    
-    @available(iOS, introduced: 1.0, deprecated: 2.0, message: "Beware. The cookywookywoo is a powerful string indeed. Use sparingly. (On a real note, this is just my package testing string since I replicate so many API's it's hard to tell who's implementation the app is choosing to use.")
-    var cookywookywoo: String {
-        "dingdongbingbong, bingbongdingdong"
-    }
+    var leadingAnchor: Anchor { return Anchor(view: self, attribute: .leading) }
+    var trailingAnchor: Anchor { return Anchor(view: self, attribute: .trailing) }
+    var topAnchor: Anchor { return Anchor(view: self, attribute: .top) }
+    var bottomAnchor: Anchor { return Anchor(view: self, attribute: .bottom) }
+    var widthAnchor: Anchor { return Anchor(view: self, attribute: .width) }
+    var heightAnchor: Anchor { return Anchor(view: self, attribute: .height) }
+    var centerXAnchor: Anchor { return Anchor(view: self, attribute: .centerX) }
+    var centerYAnchor: Anchor { return Anchor(view: self, attribute: .centerY) }
+    var cookywookywoo: Anchor { return Anchor(view: self, attribute: .centerX) }
 }
 
 // MARK: - NSLayoutConstraint isActive Backport
-private var firstAnchorKey: UInt8 = 0
-private var secondAnchorKey: UInt8 = 0
 private let activeConstraints: NSHashTable = NSHashTable<AnyObject>(options: .weakMemory)
 
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
 public extension NSLayoutConstraint {
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
-    var firstAnchor: Anchor? {
-        get { objc_getAssociatedObject(self, &firstAnchorKey) as? Anchor }
-        set { objc_setAssociatedObject(self, &firstAnchorKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
-    }
-    
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
-    var secondAnchor: Anchor? {
-        get { objc_getAssociatedObject(self, &secondAnchorKey) as? Anchor }
-        set { objc_setAssociatedObject(self, &secondAnchorKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
-    }
-    
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var isActive: Bool {
         get {
             return activeConstraints.contains(self)
@@ -123,13 +76,11 @@ public extension NSLayoutConstraint {
         }
     }
     
-    // MARK: - Correct signatures (match UIKit)
-    
+    // MARK: - Activate / Deactivate multiple constraints
     @available(iOS, introduced: 6.0, obsoleted: 8.0)
     class func activate(_ constraints: [NSLayoutConstraint]) {
         for c in constraints { c.isActive = true }
     }
-    
     @available(iOS, introduced: 6.0, obsoleted: 8.0)
     class func deactivate(_ constraints: [NSLayoutConstraint]) {
         for c in constraints { c.isActive = false }
