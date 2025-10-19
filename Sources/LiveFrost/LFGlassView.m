@@ -281,59 +281,55 @@
     // Convert bounds to targetView coordinates
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
-    // Clear the effect context
+    // Clear previous frame
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // Set up transform (flip vertically, scale, translate)
+    // Flip vertically and apply scale
     CGContextSaveGState(_effectInContext);
-
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
     CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    // Render the target view into the context
+    // Render targetView
     [targetView.layer renderInContext:_effectInContext];
 
     CGContextRestoreGState(_effectInContext);
-
-    // Unhide self
     self.hidden = NO;
 
     // ---- Apply Gaussian Blur using Core Image ----
-    // Create a CGImage from the input context
     CGImageRef inputCGImage = CGBitmapContextCreateImage(_effectInContext);
     if (!inputCGImage) return;
 
     CIImage *inputImage = [[CIImage alloc] initWithCGImage:inputCGImage];
     CGImageRelease(inputCGImage);
 
-    // Apply Gaussian blur filter
-    CGFloat radius = _blurRadius > 0 ? _blurRadius : 10.0;
+    // Create blur filter
     CIFilter *blurFilter = [CIFilter filterWithName:@"CIGaussianBlur"];
+    [blurFilter setDefaults];
     [blurFilter setValue:inputImage forKey:kCIInputImageKey];
-    [blurFilter setValue:@(radius) forKey:kCIInputRadiusKey];
-    CIImage *outputImage = [blurFilter valueForKey:kCIOutputImageKey];
+    [blurFilter setValue:@(_blurRadius) forKey:@"inputRadius"];   // ivar from init
+
+    CIImage *outputImage = blurFilter.outputImage;
     if (!outputImage) return;
 
-    // Reuse a static CIContext for performance
+    // Crop the expanded blur area back to original extent
+    CIImage *cropped = [outputImage imageByCroppingToRect:[inputImage extent]];
+
+    // Reuse CIContext for performance
     static CIContext *ciContext = nil;
     if (!ciContext) {
-        ciContext = [CIContext contextWithOptions:nil];
+        ciContext = [CIContext contextWithOptions:@{ kCIContextUseSoftwareRenderer : @NO }];
     }
 
-    // Crop output to input extent (CIGaussianBlur expands bounds)
-    CGRect outputRect = [inputImage extent];
-
-    // Create a CGImage from the blurred CIImage
-    CGImageRef outputCGImage = [ciContext createCGImage:outputImage fromRect:outputRect];
+    // Render CIImage to CGImage
+    CGImageRef outputCGImage = [ciContext createCGImage:cropped fromRect:[inputImage extent]];
     if (!outputCGImage) return;
 
-    // Assign to layer
+    // Commit to layer
     self.layer.contents = (__bridge id)outputCGImage;
-
-    // Cleanup
     CGImageRelease(outputCGImage);
 }
+
 
 
 @end
