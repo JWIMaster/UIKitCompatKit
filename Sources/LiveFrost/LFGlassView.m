@@ -274,48 +274,46 @@
     if (!targetView || !self.window) return;
 
     CGSize scaledSize = self.scaledSize;
-
-    // Hide temporarily to avoid capturing self
+    
+    // Hide self temporarily
     self.hidden = YES;
 
-    // Convert bounds to targetView coordinates
+    // Calculate self.bounds in targetView coordinates
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
     // Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // Flip vertically and scale
+    // Set up transform: flip vertically, then scale, then translate
     CGContextSaveGState(_effectInContext);
+
+    // Flip Y-axis
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
     CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
+
+    // Translate so we capture the correct area
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
     // Render targetView
     [targetView.layer renderInContext:_effectInContext];
 
+
     CGContextRestoreGState(_effectInContext);
+
+
     self.hidden = NO;
 
-    // ---- Apply single tent filter ----
-    // Tent filter kernel radius
-    NSUInteger kernel = (NSUInteger)floor(_rawBlurRadius * _scaleFactor) * 2 + 1;
-    if (kernel < 1) kernel = 1;
-
-    // Perform tent convolution
-    vImageTentConvolve_ARGB8888(&_effectInBuffer,
-                                &_effectOutBuffer,
-                                NULL,
-                                0, 0,
-                                kernel, kernel,
-                                0,
-                                kvImageEdgeExtend);
+    // Apply box blur
+    uint32_t blurKernel = _precalculatedBlurKernel;
+    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 
     // Commit to layer
     CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
-    self.layer.contents = (__bridge id)outImage;
+    self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
-
 
 
 @end
