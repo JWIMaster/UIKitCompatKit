@@ -274,7 +274,7 @@
     if (!targetView || !self.window) return;
 
     CGSize scaledSize = self.scaledSize;
-    
+
     // Hide self temporarily
     self.hidden = YES;
 
@@ -294,26 +294,27 @@
     // Translate so we capture the correct area
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    // Render targetView
-    [targetView.layer renderInContext:_effectInContext];
-
+    // Render targetView using drawViewHierarchyInRect
+    UIGraphicsPushContext(_effectInContext);
+    [targetView drawViewHierarchyInRect:targetView.bounds afterScreenUpdates:NO];
+    UIGraphicsPopContext();
 
     CGContextRestoreGState(_effectInContext);
-
 
     self.hidden = NO;
 
     // Apply box blur
-    uint32_t blurKernel = _precalculatedBlurKernel * 1.3;
+    uint32_t blurKernel = _precalculatedBlurKernel;
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    //vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 
     // Commit to layer
     CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
+
 
 
 @end
