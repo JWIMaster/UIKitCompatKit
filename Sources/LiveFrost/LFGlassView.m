@@ -305,11 +305,13 @@
 
     // Create blur filter
     CIFilter *blurFilter = [CIFilter filterWithName:@"CIGaussianBlur"];
-    [blurFilter setDefaults];
-    [blurFilter setValue:inputImage forKey:kCIInputImageKey];
-    [blurFilter setValue:@(_blurRadius) forKey:@"inputRadius"];   // ivar from init
+    if (!blurFilter) return;
 
-    CIImage *outputImage = blurFilter.outputImage;
+    [blurFilter setDefaults];
+    [blurFilter setValue:inputImage forKey:kCIInputImageKey];        // input image key
+    [blurFilter setValue:[NSNumber numberWithFloat:_blurRadius] forKey:@"inputRadius"];  // key method
+
+    CIImage *outputImage = [blurFilter valueForKey:kCIOutputImageKey]; // get result properly
     if (!outputImage) return;
 
     // Crop the expanded blur area back to original extent
