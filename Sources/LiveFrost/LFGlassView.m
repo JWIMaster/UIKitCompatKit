@@ -307,7 +307,7 @@
     CIFilter *blurFilter = [CIFilter filterWithName:@"CIGaussianBlur"];
     [blurFilter setDefaults];
     [blurFilter setValue:inputImage forKey:kCIInputImageKey];
-    [blurFilter setValue:@(_rawBlurRadius) forKey:@"inputRadius"];   // ivar from init
+    [blurFilter setValue:@(_blurRadius) forKey:@"inputRadius"];   // ivar from init
 
     CIImage *outputImage = blurFilter.outputImage;
     if (!outputImage) return;
