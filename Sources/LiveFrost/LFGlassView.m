@@ -274,64 +274,46 @@
     if (!targetView || !self.window) return;
 
     CGSize scaledSize = self.scaledSize;
-
-    // Hide temporarily to avoid capturing self
+    
+    // Hide self temporarily
     self.hidden = YES;
 
-    // Convert bounds to targetView coordinates
+    // Calculate self.bounds in targetView coordinates
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
-    // Clear previous frame
+    // Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // Flip vertically and apply scale
+    // Set up transform: flip vertically, then scale, then translate
     CGContextSaveGState(_effectInContext);
+
+    // Flip Y-axis
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
     CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
+
+    // Translate so we capture the correct area
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
     // Render targetView
     [targetView.layer renderInContext:_effectInContext];
 
+
     CGContextRestoreGState(_effectInContext);
+
+
     self.hidden = NO;
 
-    // ---- Apply Gaussian Blur using Core Image ----
-    CGImageRef inputCGImage = CGBitmapContextCreateImage(_effectInContext);
-    if (!inputCGImage) return;
-
-    CIImage *inputImage = [[CIImage alloc] initWithCGImage:inputCGImage];
-    CGImageRelease(inputCGImage);
-
-    // Create blur filter
-    CIFilter *blurFilter = [CIFilter filterWithName:@"CIGaussianBlur"];
-    if (!blurFilter) return;
-
-    [blurFilter setDefaults];
-    [blurFilter setValue:inputImage forKey:kCIInputImageKey];        // input image key
-    [blurFilter setValue:[NSNumber numberWithFloat:40] forKey:@"inputRadius"];  // key method
-
-    CIImage *outputImage = [blurFilter valueForKey:kCIOutputImageKey]; // get result properly
-    if (!outputImage) return;
-
-    // Crop the expanded blur area back to original extent
-    CIImage *cropped = [outputImage imageByCroppingToRect:[inputImage extent]];
-
-    // Reuse CIContext for performance
-    static CIContext *ciContext = nil;
-    if (!ciContext) {
-        ciContext = [CIContext contextWithOptions:@{ kCIContextUseSoftwareRenderer : @NO }];
-    }
-
-    // Render CIImage to CGImage
-    CGImageRef outputCGImage = [ciContext createCGImage:cropped fromRect:[inputImage extent]];
-    if (!outputCGImage) return;
+    // Apply box blur
+    uint32_t blurKernel = _precalculatedBlurKernel * 1.3;
+    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    //vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 
     // Commit to layer
-    self.layer.contents = (__bridge id)outputCGImage;
-    CGImageRelease(outputCGImage);
+    CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
+    self.layer.contents = (__bridge id)(outImage);
+    CGImageRelease(outImage);
 }
-
 
 
 @end
