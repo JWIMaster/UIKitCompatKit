@@ -83,15 +83,11 @@
 }
 
 - (void)updatePrecalculatedBlurKernel {
-    CGFloat effectiveRadius = _rawBlurRadius * _scaleFactor; // desired visual blur scaled
-    NSUInteger numPasses = 1; // number of box blur passes
-    CGFloat boxRadius = effectiveRadius * sqrt(3.0 / numPasses);
-
-    uint32_t radius = (uint32_t)floor(boxRadius + 0.5);
-    radius += (radius + 1) % 2; // make sure radius is odd
+    CGFloat effectiveRadius = _rawBlurRadius * _scaleFactor;
+    uint32_t radius = (uint32_t)floor(effectiveRadius * 3. * sqrt(2 * M_PI) / 4 + 0.5);
+    radius += (radius + 1) % 2;
     _precalculatedBlurKernel = radius;
 }
-
 
 - (void)setScaleFactor:(CGFloat)scaleFactor {
     _scaleFactor = scaleFactor;
@@ -310,8 +306,8 @@
     // Apply box blur
     uint32_t blurKernel = _precalculatedBlurKernel;
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    //vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    //vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 
     // Commit to layer
     CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
