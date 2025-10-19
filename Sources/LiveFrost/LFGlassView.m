@@ -274,45 +274,65 @@
     if (!targetView || !self.window) return;
 
     CGSize scaledSize = self.scaledSize;
-    
-    // Hide self temporarily
+
+    // Hide temporarily to avoid capturing self
     self.hidden = YES;
 
-    // Calculate self.bounds in targetView coordinates
+    // Convert bounds to targetView coordinates
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
-    // Clear previous contents
+    // Clear the effect context
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // Set up transform: flip vertically, then scale, then translate
+    // Set up transform (flip vertically, scale, translate)
     CGContextSaveGState(_effectInContext);
 
-    // Flip Y-axis
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
     CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
-
-    // Translate so we capture the correct area
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    // Render targetView
+    // Render the target view into the context
     [targetView.layer renderInContext:_effectInContext];
-
 
     CGContextRestoreGState(_effectInContext);
 
-
+    // Unhide self
     self.hidden = NO;
 
-    // Apply box blur
-    uint32_t blurKernel = _precalculatedBlurKernel;
-    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    // ---- Apply Gaussian Blur using Core Image ----
+    // Create a CGImage from the input context
+    CGImageRef inputCGImage = CGBitmapContextCreateImage(_effectInContext);
+    if (!inputCGImage) return;
 
-    // Commit to layer
-    CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
-    self.layer.contents = (__bridge id)(outImage);
-    CGImageRelease(outImage);
+    CIImage *inputImage = [[CIImage alloc] initWithCGImage:inputCGImage];
+    CGImageRelease(inputCGImage);
+
+    // Apply Gaussian blur filter
+    CGFloat radius = _blurRadius > 0 ? _blurRadius : 10.0;
+    CIFilter *blurFilter = [CIFilter filterWithName:@"CIGaussianBlur"];
+    [blurFilter setValue:inputImage forKey:kCIInputImageKey];
+    [blurFilter setValue:@(radius) forKey:kCIInputRadiusKey];
+    CIImage *outputImage = [blurFilter valueForKey:kCIOutputImageKey];
+    if (!outputImage) return;
+
+    // Reuse a static CIContext for performance
+    static CIContext *ciContext = nil;
+    if (!ciContext) {
+        ciContext = [CIContext contextWithOptions:nil];
+    }
+
+    // Crop output to input extent (CIGaussianBlur expands bounds)
+    CGRect outputRect = [inputImage extent];
+
+    // Create a CGImage from the blurred CIImage
+    CGImageRef outputCGImage = [ciContext createCGImage:outputImage fromRect:outputRect];
+    if (!outputCGImage) return;
+
+    // Assign to layer
+    self.layer.contents = (__bridge id)outputCGImage;
+
+    // Cleanup
+    CGImageRelease(outputCGImage);
 }
 
 
