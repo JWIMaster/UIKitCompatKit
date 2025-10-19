@@ -309,7 +309,7 @@
 
     [blurFilter setDefaults];
     [blurFilter setValue:inputImage forKey:kCIInputImageKey];        // input image key
-    [blurFilter setValue:[NSNumber numberWithFloat:_blurRadius] forKey:@"inputRadius"];  // key method
+    [blurFilter setValue:[NSNumber numberWithFloat:40] forKey:@"inputRadius"];  // key method
 
     CIImage *outputImage = [blurFilter valueForKey:kCIOutputImageKey]; // get result properly
     if (!outputImage) return;
