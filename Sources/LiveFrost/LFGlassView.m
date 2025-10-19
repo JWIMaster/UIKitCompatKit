@@ -278,41 +278,61 @@
     // Hide self temporarily
     self.hidden = YES;
 
-    // Calculate self.bounds in targetView coordinates
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
-    // Clear previous contents
-    CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
+    // 1. Begin UIGraphics context for snapshot
+    UIGraphicsBeginImageContextWithOptions(scaledSize, NO, 1.0);
+    CGContextRef ctx = UIGraphicsGetCurrentContext();
 
-    // Set up transform: flip vertically, then scale, then translate
-    CGContextSaveGState(_effectInContext);
+    if (!ctx) {
+        self.hidden = NO;
+        UIGraphicsEndImageContext();
+        return;
+    }
 
-    // Flip Y-axis
-    CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
-    CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
+    CGContextSaveGState(ctx);
+    // Flip and scale
+    CGContextTranslateCTM(ctx, 0, scaledSize.height);
+    CGContextScaleCTM(ctx, _scaleFactor, -_scaleFactor);
+    CGContextTranslateCTM(ctx, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    // Translate so we capture the correct area
-    CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
-
-    // Render targetView using drawViewHierarchyInRect
-    UIGraphicsPushContext(_effectInContext);
+    // 2. Draw the target view
     [targetView drawViewHierarchyInRect:targetView.bounds afterScreenUpdates:NO];
-    UIGraphicsPopContext();
+    CGContextRestoreGState(ctx);
 
-    CGContextRestoreGState(_effectInContext);
+    UIImage *snapshot = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
 
     self.hidden = NO;
+    if (!snapshot) return;
 
-    // Apply box blur
+    // 3. Copy snapshot pixels into vImage buffer
+    CGImageRef cgImage = snapshot.CGImage;
+    size_t width = CGImageGetWidth(cgImage);
+    size_t height = CGImageGetHeight(cgImage);
+
+    CGContextRef bitmapCtx = CGBitmapContextCreate(NULL, width, height, 8, width*4, CGImageGetColorSpace(cgImage), kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Big);
+    if (!bitmapCtx) return;
+
+    CGContextDrawImage(bitmapCtx, CGRectMake(0, 0, width, height), cgImage);
+
+    _effectInBuffer = (vImage_Buffer){.data = CGBitmapContextGetData(bitmapCtx),
+                                      .width = width,
+                                      .height = height,
+                                      .rowBytes = CGBitmapContextGetBytesPerRow(bitmapCtx)};
+    _effectOutBuffer = _effectInBuffer; // reuse buffer for output
+
+    // 4. Apply box blur
     uint32_t blurKernel = _precalculatedBlurKernel;
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 
-    // Commit to layer
-    CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
-    self.layer.contents = (__bridge id)(outImage);
+    // 5. Commit to layer
+    CGImageRef outImage = CGBitmapContextCreateImage(bitmapCtx);
+    self.layer.contents = (__bridge id)outImage;
     CGImageRelease(outImage);
+    CGContextRelease(bitmapCtx);
 }
 
 
