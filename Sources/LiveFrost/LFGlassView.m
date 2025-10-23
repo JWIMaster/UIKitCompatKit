@@ -27,8 +27,6 @@
 @property (nonatomic, strong, readonly) CALayer *backgroundColorLayer;
 @property (nonatomic, assign) CGFloat rawBlurRadius;
 
-@property (nonatomic, strong) dispatch_queue_t renderQueue;
-
 @end
 
 #if !__has_feature(objc_arc)
@@ -66,7 +64,6 @@
     self.userInteractionEnabled = NO;
     self.layer.actions = @{@"contents": [NSNull null]};
     self.layer.drawsAsynchronously = YES;
-    _renderQueue = dispatch_queue_create("com.myapp.lfglassview.render", DISPATCH_QUEUE_SERIAL);
     _shouldLiveBlur = YES;
     _frameInterval = 1;
     _currentFrameInterval = 0;
@@ -276,50 +273,50 @@
     UIView *targetView = self.snapshotTargetView ?: self.superview;
     if (!targetView || !self.window) return;
 
+    targetView.layer.shouldRasterize = YES;
+    targetView.layer.rasterizationScale = [UIScreen mainScreen].scale;
+    
     CGSize scaledSize = self.scaledSize;
+    
+    // Hide self temporarily
+    self.hidden = YES;
 
-    // Dispatch the heavy work to serial queue
-    dispatch_async(_renderQueue, ^{
-        // Hide self on main thread
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            self.hidden = YES;
-        });
+    // Calculate self.bounds in targetView coordinates
+    CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
-        CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
+    // Clear previous contents
+    CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-        // Clear previous contents
-        CGContextClearRect(self->_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
+    // Set up transform: flip vertically, then scale, then translate
+    CGContextSaveGState(_effectInContext);
 
-        // Transform and render
-        CGContextSaveGState(self->_effectInContext);
-        CGContextTranslateCTM(self->_effectInContext, 0, scaledSize.height);
-        CGContextScaleCTM(self->_effectInContext, self->_scaleFactor, -self->_scaleFactor);
-        CGContextTranslateCTM(self->_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
+    // Flip Y-axis
+    CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
+    CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
 
-        [targetView.layer renderInContext:self->_effectInContext];
+    // Translate so we capture the correct area
+    CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-        CGContextRestoreGState(self->_effectInContext);
+    // Render targetView
+    [targetView.layer renderInContext:_effectInContext];
 
-        // Show self again on main thread
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            self.hidden = NO;
-        });
 
-        // Apply blur off main thread
-        uint32_t blurKernel = self->_precalculatedBlurKernel;
-        vImageBoxConvolve_ARGB8888(&self->_effectInBuffer, &self->_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-        vImageBoxConvolve_ARGB8888(&self->_effectOutBuffer, &self->_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-        vImageBoxConvolve_ARGB8888(&self->_effectInBuffer, &self->_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    CGContextRestoreGState(_effectInContext);
 
-        // Commit the final image on main thread
-        CGImageRef outImage = CGBitmapContextCreateImage(self->_effectOutContext);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.layer.contents = (__bridge id)(outImage);
-            CGImageRelease(outImage);
-        });
-    });
+
+    self.hidden = NO;
+
+    // Apply box blur
+    uint32_t blurKernel = _precalculatedBlurKernel;
+    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+
+    // Commit to layer
+    CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
+    self.layer.contents = (__bridge id)(outImage);
+    CGImageRelease(outImage);
 }
-
 
 
 @end
