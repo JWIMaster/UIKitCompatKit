@@ -281,32 +281,25 @@
     // Calculate self.bounds in targetView coordinates
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
-    // Clear previous contents
-    CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
+    // Capture snapshot using private API
+    UIImage *snapshotImage = [self snapshotOfView:targetView inRect:rectInTarget];
+    if (!snapshotImage) {
+        // Fallback if snapshot failed
+        self.hidden = NO;
+        return;
+    }
 
-    // Set up transform: flip vertically, then scale, then translate
+    // Draw snapshot into effectInContext
+    CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
     CGContextSaveGState(_effectInContext);
 
-    // Flip Y-axis
+    // Flip and scale
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
     CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
 
-    // Translate so we capture the correct area
-    CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
-
-    // Render targetView using private API if available
-    SEL sel = NSSelectorFromString(@"_renderSnapshotWithRect:inContext:");
-    if ([targetView respondsToSelector:sel]) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-        NSValue *rectValue = [NSValue valueWithCGRect:rectInTarget];
-        [targetView performSelector:sel withObject:rectValue withObject:(__bridge id)(_effectInContext)];
-        NSLog(@"yay");
-#pragma clang diagnostic pop
-    } else {
-        // Fallback for safety
-        [targetView.layer renderInContext:_effectInContext];
-    }
+    // Draw snapshot
+    CGImageRef cgImage = snapshotImage.CGImage;
+    CGContextDrawImage(_effectInContext, CGRectMake(0, 0, snapshotImage.size.width, snapshotImage.size.height), cgImage);
 
     CGContextRestoreGState(_effectInContext);
 
@@ -322,6 +315,27 @@
     CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
+}
+
+- (UIImage *)snapshotOfView:(UIView *)view inRect:(CGRect)rect {
+    SEL sel = NSSelectorFromString(@"createSnapshotWithRect:");
+    if (![view respondsToSelector:sel]) {
+        NSLog(@"View does not respond to createSnapshotWithRect");
+        return nil;
+    }
+
+    NSValue *rectValue = [NSValue valueWithCGRect:rect];
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    CGImageRef cgImage = (__bridge CGImageRef)[view performSelector:sel withObject:rectValue];
+#pragma clang diagnostic pop
+
+    if (!cgImage) return nil;
+
+    return [UIImage imageWithCGImage:cgImage
+                               scale:[UIScreen mainScreen].scale
+                         orientation:UIImageOrientationUp];
 }
 
 
