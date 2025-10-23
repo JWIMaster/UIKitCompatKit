@@ -28,11 +28,13 @@
 @end
 
 @interface LFDisplayBridge : NSObject <LFDisplayBridgeTriggering>
+@property (nonatomic, copy) NSString *runLoopMode;
 
 + (instancetype) sharedInstance;
 
 @property (nonatomic, readonly, assign) CFMutableSetRef subscribedViews;
 - (void) addSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object;
 - (void) removeSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object;
+- (void) setRunLoopMode:(NSString *)runLoopMode;
 
 @end

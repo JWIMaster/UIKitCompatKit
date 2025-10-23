@@ -57,9 +57,22 @@ void LF_refreshAllSubscribedViewsApplierFunction(const void *value, void *contex
 	if (self = [super init]) {
 		_subscribedViews = CFSetCreateMutable(kCFAllocatorDefault, 0, NULL);
 		_displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(handleDisplayLink:)];
-		[_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+        _runLoopMode = NSRunLoopCommonModes;
+		[_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:_runLoopMode];
 	}
 	return self;
+}
+
+
+- (void)setRunLoopMode:(NSString *)runLoopMode {
+    if ([_runLoopMode isEqualToString:runLoopMode]) return;
+
+    // Remove from old mode
+    [_displayLink removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:_runLoopMode];
+
+    // Set and add to new one
+    _runLoopMode = [runLoopMode copy];
+    [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:_runLoopMode];
 }
 
 - (void) addSubscribedViewsObject:(UIView<LFDisplayBridgeTriggering> *)object {
