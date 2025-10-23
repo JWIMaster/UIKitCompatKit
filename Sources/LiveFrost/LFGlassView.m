@@ -270,20 +270,16 @@
     if (++_currentFrameInterval < _frameInterval) return;
     _currentFrameInterval = 0;
 
-    // Find a valid UIKit view to snapshot
-    UIView *snapshotView = self.snapshotTargetView ?: self.superview;
-    while ([snapshotView isKindOfClass:[LFGlassView class]] && snapshotView.superview) {
-        snapshotView = snapshotView.superview;
-    }
-    if (!snapshotView || !self.window) return;
-
+    UIView *targetView = self.snapshotTargetView ?: self.superview;
+    if (!targetView || !self.window) return;
+    
     CGSize scaledSize = self.scaledSize;
     
     // Hide self temporarily
     self.hidden = YES;
 
-    // Calculate self.bounds in snapshotView coordinates
-    CGRect rectInSnapshotView = [self convertRect:self.bounds toView:snapshotView];
+    // Calculate self.bounds in targetView coordinates
+    CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
     // Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
@@ -295,23 +291,15 @@
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
     CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
 
-    // Translate to capture correct area
-    CGContextTranslateCTM(_effectInContext, -rectInSnapshotView.origin.x, -rectInSnapshotView.origin.y);
+    // Translate so we capture the correct area
+    CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    // Use private API if available
-    SEL selector = NSSelectorFromString(@"_renderSnapshotWithRect:inContext:");
-    if ([snapshotView respondsToSelector:selector]) {
-        NSValue *rectValue = [NSValue valueWithCGRect:rectInSnapshotView];
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-        [snapshotView performSelector:selector withObject:rectValue withObject:(__bridge id)_effectInContext];
-#pragma clang diagnostic pop
-    } else {
-        // Fallback only if necessary
-        NSLog(@"Failed");
-    }
+    // Render targetView
+    [targetView.layer renderInContext:_effectInContext];
+
 
     CGContextRestoreGState(_effectInContext);
+
 
     self.hidden = NO;
 
@@ -326,7 +314,6 @@
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
-
 
 
 @end
