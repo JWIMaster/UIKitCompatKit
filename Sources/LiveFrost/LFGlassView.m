@@ -272,9 +272,6 @@
 
     UIView *targetView = self.snapshotTargetView ?: self.superview;
     if (!targetView || !self.window) return;
-
-    targetView.layer.shouldRasterize = YES;
-    targetView.layer.rasterizationScale = [UIScreen mainScreen].scale;
     
     CGSize scaledSize = self.scaledSize;
     
