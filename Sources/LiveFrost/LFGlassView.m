@@ -294,12 +294,15 @@
     // Translate so we capture the correct area
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    // Render targetView
-    [targetView.layer renderInContext:_effectInContext];
-
+    // Use private API to render snapshot
+    SEL selector = NSSelectorFromString(@"_renderSnapshotWithRect:inContext:");
+    NSValue *rectValue = [NSValue valueWithCGRect:rectInTarget];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    [targetView performSelector:selector withObject:rectValue withObject:(__bridge id)_effectInContext];
+#pragma clang diagnostic pop
 
     CGContextRestoreGState(_effectInContext);
-
 
     self.hidden = NO;
 
@@ -314,6 +317,7 @@
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
+
 
 
 @end
