@@ -301,6 +301,7 @@
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
         NSValue *rectValue = [NSValue valueWithCGRect:rectInTarget];
         [targetView performSelector:sel withObject:rectValue withObject:(__bridge id)(_effectInContext)];
+        NSLog(@"yay")
 #pragma clang diagnostic pop
     } else {
         // Fallback for safety
