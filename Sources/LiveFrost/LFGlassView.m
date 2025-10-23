@@ -272,38 +272,24 @@
 
     UIView *targetView = self.snapshotTargetView ?: self.superview;
     if (!targetView || !self.window) return;
-    
-    CGSize scaledSize = self.scaledSize;
-    
-    // Hide self temporarily
-    self.hidden = YES;
 
-    // Calculate self.bounds in targetView coordinates
+    CGSize scaledSize = self.scaledSize;
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
     // Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // Set up transform: flip vertically, then scale, then translate
+    // Draw just the portion using CALayer delegate method
+    [targetView.layer setNeedsDisplay];
+    [targetView.layer drawInContext:_effectInContext];
+
+    // Transform context to capture only the rect we want
     CGContextSaveGState(_effectInContext);
-
-    // Flip Y-axis
-    CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
-    CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
-
-    // Translate so we capture the correct area
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
-
-    // Render targetView
-    [targetView.layer renderInContext:_effectInContext];
-
-
+    CGContextScaleCTM(_effectInContext, _scaleFactor, _scaleFactor);
     CGContextRestoreGState(_effectInContext);
 
-
-    self.hidden = NO;
-
-    // Apply box blur
+    // Apply vImage box blur
     uint32_t blurKernel = _precalculatedBlurKernel;
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
@@ -314,6 +300,7 @@
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
+
 
 
 @end
