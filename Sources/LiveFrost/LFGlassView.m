@@ -281,27 +281,25 @@
     // Calculate self.bounds in targetView coordinates
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
-    // Capture snapshot using private API
-    UIImage *snapshotImage = [self snapshotOfView:targetView inRect:rectInTarget];
-    if (!snapshotImage) {
-        // Fallback if snapshot failed
-        self.hidden = NO;
-        return;
-    }
-
-    // Draw snapshot into effectInContext
+    // Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
+
+    // Set up transform: flip vertically, then scale, then translate
     CGContextSaveGState(_effectInContext);
 
-    // Flip and scale
+    // Flip Y-axis
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
     CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
 
-    // Draw snapshot
-    CGImageRef cgImage = snapshotImage.CGImage;
-    CGContextDrawImage(_effectInContext, CGRectMake(0, 0, snapshotImage.size.width, snapshotImage.size.height), cgImage);
+    // Translate so we capture the correct area
+    CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
+
+    // Render targetView
+    [targetView.layer renderInContext:_effectInContext];
+
 
     CGContextRestoreGState(_effectInContext);
+
 
     self.hidden = NO;
 
@@ -316,28 +314,6 @@
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
-
-- (UIImage *)snapshotOfView:(UIView *)view inRect:(CGRect)rect {
-    SEL sel = NSSelectorFromString(@"createSnapshotWithRect:");
-    if (![view respondsToSelector:sel]) {
-        NSLog(@"View does not respond to createSnapshotWithRect");
-        return nil;
-    }
-
-    NSValue *rectValue = [NSValue valueWithCGRect:rect];
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-    CGImageRef cgImage = (__bridge CGImageRef)[view performSelector:sel withObject:rectValue];
-#pragma clang diagnostic pop
-
-    if (!cgImage) return nil;
-
-    return [UIImage imageWithCGImage:cgImage
-                               scale:[UIScreen mainScreen].scale
-                         orientation:UIImageOrientationUp];
-}
-
 
 
 @end
