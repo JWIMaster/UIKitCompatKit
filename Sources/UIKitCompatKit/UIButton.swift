@@ -19,10 +19,21 @@ private class ClosureSleeve {
 
 @available(iOS, introduced: 6.0, obsoleted: 14.0)
 public extension UIButton {
+    private struct AssociatedKeys {
+        static var sleeves = "closureSleeves"
+    }
+
     func addAction(for controlEvents: UIControl.Event, _ closure: @escaping () -> Void) {
         let sleeve = ClosureSleeve(closure)
         addTarget(sleeve, action: #selector(ClosureSleeve.invoke), for: controlEvents)
-        // Use NSUUID for unique key
-        objc_setAssociatedObject(self, NSUUID().uuidString, sleeve, .OBJC_ASSOCIATION_RETAIN)
+
+        // Keep all sleeves alive
+        var sleeves = objc_getAssociatedObject(self, &AssociatedKeys.sleeves) as? NSMutableArray
+        if sleeves == nil {
+            sleeves = NSMutableArray()
+            objc_setAssociatedObject(self, &AssociatedKeys.sleeves, sleeves, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+        sleeves?.add(sleeve)
     }
 }
+
