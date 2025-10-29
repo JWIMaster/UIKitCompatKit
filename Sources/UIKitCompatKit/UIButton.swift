@@ -35,5 +35,15 @@ public extension UIButton {
         }
         sleeves?.add(sleeve)
     }
+    
+    
+    func removeAllActions() {
+        self.removeTarget(nil, action: nil, for: .allEvents)
+
+        // Clear all stored sleeves
+        if let sleeves = objc_getAssociatedObject(self, &UIButton.AssociatedKeys.sleeves) as? NSMutableArray {
+            sleeves.removeAllObjects()
+        }
+    }
 }
 
