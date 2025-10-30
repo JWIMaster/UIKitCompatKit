@@ -329,30 +329,40 @@ UIImage* _UICreateScreenUIImage(void);
 
     self.hidden = YES;
 
+    // 1. Capture full screen using private API
     UIImage *screenImage = _UICreateScreenUIImage();
     if (!screenImage) {
         self.hidden = NO;
         return;
     }
 
-    // Get the absolute frame in screen coordinates, corrected for orientation
-    CGRect screenFrame = [self absoluteFrameInScreenForPrivateAPI];
+    // 2. Get screen scale
+    CGFloat screenScale = [UIScreen mainScreen].scale;
 
-    // Scale to buffer
+    // 3. Compute absolute frame in screen coordinates (nested views)
+    CGRect frameInWindow = [self convertRect:self.bounds toView:nil]; // nil = window coordinates
+    CGRect frameInPixels = CGRectMake(frameInWindow.origin.x * screenScale,
+                                      frameInWindow.origin.y * screenScale,
+                                      frameInWindow.size.width * screenScale,
+                                      frameInWindow.size.height * screenScale);
+
+    // 4. Scale according to buffer
+    CGRect scaledRect = CGRectMake(frameInPixels.origin.x * _scaleFactor,
+                                   frameInPixels.origin.y * _scaleFactor,
+                                   frameInPixels.size.width * _scaleFactor,
+                                   frameInPixels.size.height * _scaleFactor);
+
     CGSize scaledSize = self.scaledSize;
-    CGRect scaledRect = CGRectMake(screenFrame.origin.x * _scaleFactor,
-                                   screenFrame.origin.y * _scaleFactor,
-                                   screenFrame.size.width * _scaleFactor,
-                                   screenFrame.size.height * _scaleFactor);
 
-    // Clear previous contents
+    // 5. Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // Draw the correct portion of the screen
+    // 6. Draw cropped portion
     CGImageRef croppedImage = CGImageCreateWithImageInRect(screenImage.CGImage, scaledRect);
 
     CGContextSaveGState(_effectInContext);
-    // Flip vertically for Core Graphics
+
+    // Flip vertically once
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
     CGContextScaleCTM(_effectInContext, 1.0, -1.0);
 
@@ -363,16 +373,18 @@ UIImage* _UICreateScreenUIImage(void);
 
     self.hidden = NO;
 
-    // Apply blur
+    // 7. Apply box blur
     uint32_t blurKernel = _precalculatedBlurKernel;
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 
+    // 8. Commit to layer
     CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
+
 
 
 
