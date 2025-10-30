@@ -265,73 +265,55 @@
     _currentFrameInterval = _frameInterval - 1;
     [self refresh];
 }
-UIImage* _UICreateScreenUIImage(void);
-
 - (void)refresh {
     if (++_currentFrameInterval < _frameInterval) return;
     _currentFrameInterval = 0;
 
-    if (!self.window || CGRectIsEmpty(self.bounds)) return;
-
-    UIView *snapshotTarget = self.snapshotTargetView ?: self.superview;
-    if (!snapshotTarget) return;
-
-    // 1. Temporarily hide self
+    UIView *targetView = self.snapshotTargetView ?: self.superview;
+    if (!targetView || !self.window) return;
+    
+    CGSize scaledSize = self.scaledSize;
+    
+    // Hide self temporarily
     self.hidden = YES;
 
-    // 2. Capture full screen (private API)
-    UIImage *screenImage = _UICreateScreenUIImage();
-    if (!screenImage) {
-        self.hidden = NO;
-        return;
-    }
+    // Calculate self.bounds in targetView coordinates
+    CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
-    // 3. Compute frame relative to snapshot target
-    CGRect frameInTarget = [self convertRect:self.bounds toView:snapshotTarget];
+    // Clear previous contents
+    CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // 4. Convert to screen pixels
-    CGFloat screenScale = [UIScreen mainScreen].scale;
-    CGRect frameInPixels = CGRectMake(frameInTarget.origin.x * screenScale,
-                                      frameInTarget.origin.y * screenScale,
-                                      frameInTarget.size.width * screenScale,
-                                      frameInTarget.size.height * screenScale);
-
-    // 5. Buffer size
-    CGSize bufferSize = self.scaledSize;
-
-    // 6. Compute scale between pixels and buffer
-    CGFloat xScale = bufferSize.width / frameInPixels.size.width;
-    CGFloat yScale = bufferSize.height / frameInPixels.size.height;
-
-    // 7. Crop the screen image
-    CGImageRef croppedImage = CGImageCreateWithImageInRect(screenImage.CGImage, frameInPixels);
-
-    // 8. Draw into buffer
+    // Set up transform: flip vertically, then scale, then translate
     CGContextSaveGState(_effectInContext);
-    CGContextClearRect(_effectInContext, CGRectMake(0, 0, bufferSize.width, bufferSize.height));
 
-    // Flip vertically
-    CGContextTranslateCTM(_effectInContext, 0, bufferSize.height);
-    CGContextScaleCTM(_effectInContext, 1.0, -1.0);
+    // Flip Y-axis
+    CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
+    CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
 
-    // Scale cropped image to buffer size
-    CGContextDrawImage(_effectInContext, CGRectMake(0, 0, bufferSize.width, bufferSize.height), croppedImage);
+    // Translate so we capture the correct area
+    CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
+
+    // Render targetView
+    [targetView.layer renderInContext:_effectInContext];
+
+
     CGContextRestoreGState(_effectInContext);
-    CGImageRelease(croppedImage);
 
-    // 9. Restore visibility
+
     self.hidden = NO;
 
-    // 10. Apply blur as before
+    // Apply box blur
     uint32_t blurKernel = _precalculatedBlurKernel;
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 
+    // Commit to layer
     CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
+
 
 
 
