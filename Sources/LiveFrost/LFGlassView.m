@@ -268,22 +268,58 @@
 
 UIImage* _UICreateScreenUIImage(void);
 
-- (CGRect)absoluteFrameInScreen {
-    UIView *view = self;
+- (CGRect)absoluteFrameInScreenForPrivateAPI {
+    // Start with the view’s bounds
     CGRect frame = self.bounds;
-    
-    while (view) {
+    UIView *view = self;
+
+    // Walk up the hierarchy to get absolute coordinates relative to the screen
+    while (view.superview) {
         frame.origin.x += view.frame.origin.x;
         frame.origin.y += view.frame.origin.y;
         view = view.superview;
     }
-    
+
+    // Adjust for window origin
     UIWindow *window = self.window ?: [UIApplication sharedApplication].keyWindow;
     frame.origin.x += window.frame.origin.x;
     frame.origin.y += window.frame.origin.y;
-    
-    return frame;
+
+    // Handle device orientation (screen capture is always portrait)
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    CGSize screenSize = [UIScreen mainScreen].bounds.size;
+
+    CGRect transformedFrame = frame;
+
+    switch (orientation) {
+        case UIInterfaceOrientationPortrait:
+            // No change needed
+            break;
+        case UIInterfaceOrientationLandscapeLeft:
+            transformedFrame = CGRectMake(frame.origin.y,
+                                          screenSize.width - frame.origin.x - frame.size.width,
+                                          frame.size.height,
+                                          frame.size.width);
+            break;
+        case UIInterfaceOrientationLandscapeRight:
+            transformedFrame = CGRectMake(screenSize.height - frame.origin.y - frame.size.height,
+                                          frame.origin.x,
+                                          frame.size.height,
+                                          frame.size.width);
+            break;
+        case UIInterfaceOrientationPortraitUpsideDown:
+            transformedFrame = CGRectMake(screenSize.width - frame.origin.x - frame.size.width,
+                                          screenSize.height - frame.origin.y - frame.size.height,
+                                          frame.size.width,
+                                          frame.size.height);
+            break;
+        default:
+            break;
+    }
+
+    return transformedFrame;
 }
+
 
 - (void)refresh {
     if (++_currentFrameInterval < _frameInterval) return;
@@ -293,31 +329,30 @@ UIImage* _UICreateScreenUIImage(void);
 
     self.hidden = YES;
 
-    // 1. Capture the full screen
     UIImage *screenImage = _UICreateScreenUIImage();
     if (!screenImage) {
         self.hidden = NO;
         return;
     }
 
-    // 2. Compute absolute frame in screen coordinates
-    CGRect screenFrame = [self absoluteFrameInScreen];
+    // Get the absolute frame in screen coordinates, corrected for orientation
+    CGRect screenFrame = [self absoluteFrameInScreenForPrivateAPI];
 
-    // 3. Scale for buffer
+    // Scale to buffer
     CGSize scaledSize = self.scaledSize;
     CGRect scaledRect = CGRectMake(screenFrame.origin.x * _scaleFactor,
                                    screenFrame.origin.y * _scaleFactor,
                                    screenFrame.size.width * _scaleFactor,
                                    screenFrame.size.height * _scaleFactor);
 
-    // 4. Clear previous contents
+    // Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // 5. Draw the cropped portion directly into the context (no blur)
+    // Draw the correct portion of the screen
     CGImageRef croppedImage = CGImageCreateWithImageInRect(screenImage.CGImage, scaledRect);
 
     CGContextSaveGState(_effectInContext);
-    // Flip vertically
+    // Flip vertically for Core Graphics
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
     CGContextScaleCTM(_effectInContext, 1.0, -1.0);
 
@@ -328,12 +363,16 @@ UIImage* _UICreateScreenUIImage(void);
 
     self.hidden = NO;
 
-    // 6. Commit to layer directly (no blur)
-    CGImageRef outImage = CGBitmapContextCreateImage(_effectInContext);
+    // Apply blur
+    uint32_t blurKernel = _precalculatedBlurKernel;
+    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+
+    CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
-
 
 
 
