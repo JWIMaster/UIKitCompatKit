@@ -266,40 +266,33 @@
     [self refresh];
 }
 
+UIImage* _UICreateScreenUIImage(void);
+
 - (void)refresh {
     if (++_currentFrameInterval < _frameInterval) return;
     _currentFrameInterval = 0;
 
-    UIView *targetView = self.snapshotTargetView ?: self.superview;
-    if (!targetView || !self.window) return;
-    
-    CGSize scaledSize = self.scaledSize;
-    
     // Hide self temporarily
     self.hidden = YES;
 
-    // Calculate self.bounds in targetView coordinates
-    CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
+    // Capture the whole screen using the private API
+    UIImage *screenImage = _UICreateScreenUIImage();
+    if (!screenImage) {
+        self.hidden = NO;
+        return;
+    }
 
-    // Clear previous contents
+    // Scale the image to your scaled size
+    CGSize scaledSize = self.scaledSize;
+    UIGraphicsBeginImageContextWithOptions(scaledSize, NO, 1.0);
+    [screenImage drawInRect:CGRectMake(0, 0, scaledSize.width, scaledSize.height)];
+    UIImage *scaledScreenImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+
+    // Copy image data into effectInContext
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
-
-    // Set up transform: flip vertically, then scale, then translate
-    CGContextSaveGState(_effectInContext);
-
-    // Flip Y-axis
-    CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
-    CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
-
-    // Translate so we capture the correct area
-    CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
-
-    // Render targetView
-    [targetView.layer renderInContext:_effectInContext];
-
-
-    CGContextRestoreGState(_effectInContext);
-
+    CGImageRef cgImage = scaledScreenImage.CGImage;
+    CGContextDrawImage(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height), cgImage);
 
     self.hidden = NO;
 
@@ -314,6 +307,7 @@
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
+
 
 
 @end
