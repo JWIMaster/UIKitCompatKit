@@ -293,14 +293,14 @@ UIImage* _UICreateScreenUIImage(void);
 
     self.hidden = YES;
 
-    // 1. Capture the full screen using private API
+    // 1. Capture the full screen
     UIImage *screenImage = _UICreateScreenUIImage();
     if (!screenImage) {
         self.hidden = NO;
         return;
     }
 
-    // 2. Compute the absolute frame in screen coordinates
+    // 2. Compute absolute frame in screen coordinates
     CGRect screenFrame = [self absoluteFrameInScreen];
 
     // 3. Scale for buffer
@@ -313,11 +313,11 @@ UIImage* _UICreateScreenUIImage(void);
     // 4. Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // 5. Draw the cropped portion into the context
+    // 5. Draw the cropped portion directly into the context (no blur)
     CGImageRef croppedImage = CGImageCreateWithImageInRect(screenImage.CGImage, scaledRect);
 
     CGContextSaveGState(_effectInContext);
-    // Flip vertically for Core Graphics coordinates
+    // Flip vertically
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
     CGContextScaleCTM(_effectInContext, 1.0, -1.0);
 
@@ -328,17 +328,12 @@ UIImage* _UICreateScreenUIImage(void);
 
     self.hidden = NO;
 
-    // 6. Apply box blur
-    uint32_t blurKernel = _precalculatedBlurKernel;
-    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-
-    // 7. Commit to layer
-    CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
+    // 6. Commit to layer directly (no blur)
+    CGImageRef outImage = CGBitmapContextCreateImage(_effectInContext);
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
+
 
 
 
