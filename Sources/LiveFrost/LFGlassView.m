@@ -293,12 +293,13 @@
     // Translate so we capture the correct area
     CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    // Render targetView
-    [targetView.layer renderInContext:_effectInContext];
-
+    // Use drawViewHierarchyInRect:afterScreenUpdates: to capture the targetView's visual content
+    // Since this is drawing into a context, we don't need to manually render its layer
+    UIGraphicsPushContext(_effectInContext);
+    [targetView drawViewHierarchyInRect:rectInTarget afterScreenUpdates:YES];
+    UIGraphicsPopContext();
 
     CGContextRestoreGState(_effectInContext);
-
 
     self.hidden = NO;
 
