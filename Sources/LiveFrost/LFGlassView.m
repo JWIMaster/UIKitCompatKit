@@ -268,6 +268,23 @@
 
 UIImage* _UICreateScreenUIImage(void);
 
+- (CGRect)absoluteFrameInScreen {
+    UIView *view = self;
+    CGRect frame = self.bounds;
+    
+    while (view) {
+        frame.origin.x += view.frame.origin.x;
+        frame.origin.y += view.frame.origin.y;
+        view = view.superview;
+    }
+    
+    UIWindow *window = self.window ?: [UIApplication sharedApplication].keyWindow;
+    frame.origin.x += window.frame.origin.x;
+    frame.origin.y += window.frame.origin.y;
+    
+    return frame;
+}
+
 - (void)refresh {
     if (++_currentFrameInterval < _frameInterval) return;
     _currentFrameInterval = 0;
@@ -283,36 +300,35 @@ UIImage* _UICreateScreenUIImage(void);
         return;
     }
 
-    // 2. Compute self's frame in screen coordinates
-    CGRect rectInScreen = [self convertRect:self.bounds toView:nil];
+    // 2. Compute the absolute frame in screen coordinates
+    CGRect screenFrame = [self absoluteFrameInScreen];
 
-    // 3. Scale to buffer size
+    // 3. Scale for buffer
     CGSize scaledSize = self.scaledSize;
-    CGRect scaledRect = CGRectMake(rectInScreen.origin.x * _scaleFactor,
-                                   rectInScreen.origin.y * _scaleFactor,
-                                   rectInScreen.size.width * _scaleFactor,
-                                   rectInScreen.size.height * _scaleFactor);
+    CGRect scaledRect = CGRectMake(screenFrame.origin.x * _scaleFactor,
+                                   screenFrame.origin.y * _scaleFactor,
+                                   screenFrame.size.width * _scaleFactor,
+                                   screenFrame.size.height * _scaleFactor);
 
-    // 4. Clear previous buffer
+    // 4. Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // 5. Draw the cropped portion of the screen into the effectInContext
-    CGImageRef screenCGImage = screenImage.CGImage;
-    CGImageRef croppedImage = CGImageCreateWithImageInRect(screenCGImage, scaledRect);
+    // 5. Draw the cropped portion into the context
+    CGImageRef croppedImage = CGImageCreateWithImageInRect(screenImage.CGImage, scaledRect);
 
     CGContextSaveGState(_effectInContext);
-    // Flip vertically for Core Graphics
+    // Flip vertically for Core Graphics coordinates
     CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
     CGContextScaleCTM(_effectInContext, 1.0, -1.0);
 
     CGContextDrawImage(_effectInContext, CGRectMake(0, 0, scaledRect.size.width, scaledRect.size.height), croppedImage);
-    CGContextRestoreGState(_effectInContext);
 
+    CGContextRestoreGState(_effectInContext);
     CGImageRelease(croppedImage);
 
     self.hidden = NO;
 
-    // 6. Apply box blur using your existing pipeline
+    // 6. Apply box blur
     uint32_t blurKernel = _precalculatedBlurKernel;
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
@@ -322,8 +338,6 @@ UIImage* _UICreateScreenUIImage(void);
     CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
-
-    // 8. ARC-safe, no need to release screenImage
 }
 
 
