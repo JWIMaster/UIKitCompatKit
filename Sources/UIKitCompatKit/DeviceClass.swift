@@ -38,7 +38,7 @@ public class DeviceInfo {
             case "iPhone1,1", "iPhone1,2": // iPhone 1 & 3G
                 return .unknown
             case "iPhone2,1": // iPhone 3GS
-                return .unknown
+                return .a4
             case "iPhone3,1", "iPhone3,2", "iPhone3,3": // iPhone 4
                 return .a4
             case "iPhone4,1": // iPhone 4S
