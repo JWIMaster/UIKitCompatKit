@@ -272,9 +272,9 @@
 
     UIView *targetView = self.snapshotTargetView ?: self.superview;
     if (!targetView || !self.window) return;
-    
+
     CGSize scaledSize = self.scaledSize;
-    
+
     // Hide self temporarily
     self.hidden = YES;
 
@@ -284,36 +284,37 @@
     // Clear previous contents
     CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // Set up transform: flip vertically, then scale, then translate
-    CGContextSaveGState(_effectInContext);
+    // Dispatch async render to background queue
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        // Transform: flip vertically, scale, translate
+        CGContextSaveGState(_effectInContext);
+        CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
+        CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
+        CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-    // Flip Y-axis
-    CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
-    CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
+        // Render targetView layer into context off the main thread
+        [targetView.layer renderInContext:_effectInContext];
 
-    // Translate so we capture the correct area
-    CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
+        CGContextRestoreGState(_effectInContext);
 
-    // Render targetView
-    [targetView.layer renderInContext:_effectInContext];
+        // Apply triple box blur
+        uint32_t blurKernel = _precalculatedBlurKernel;
+        vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+        vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+        vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 
+        // Create CGImage from output buffer
+        CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
 
-    CGContextRestoreGState(_effectInContext);
-
-
-    self.hidden = NO;
-
-    // Apply box blur
-    uint32_t blurKernel = _precalculatedBlurKernel;
-    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-
-    // Commit to layer
-    CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
-    self.layer.contents = (__bridge id)(outImage);
-    CGImageRelease(outImage);
+        // Commit to layer on main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.layer.contents = (__bridge id)(outImage);
+            CGImageRelease(outImage);
+            self.hidden = NO;
+        });
+    });
 }
+
 
 
 @end
