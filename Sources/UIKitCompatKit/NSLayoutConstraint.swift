@@ -137,12 +137,16 @@ public extension NSLayoutConstraint {
     
     // MARK: - Correct signatures (match UIKit)
     
-    @available(iOS, introduced: 6.0, deprecated: 8.0)
+    @available(iOS, introduced: 6.0, obsoleted: 8.0)
     class func activate(_ constraints: [NSLayoutConstraint]) {
         for c in constraints { c.isActive = true }
     }
     
-    @available(iOS, introduced: 6.0, deprecated: 8.0)
+    class func activateCompat(_ constraints: [NSLayoutConstraint]) {
+        for c in constraints { c.isActive = true }
+    }
+    
+    @available(iOS, introduced: 6.0, obsoleted: 8.0)
     class func deactivate(_ constraints: [NSLayoutConstraint]) {
         for c in constraints { c.isActive = false }
     }
