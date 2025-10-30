@@ -27,6 +27,7 @@
 @property (nonatomic, strong, readonly) CALayer *backgroundColorLayer;
 @property (nonatomic, assign) CGFloat rawBlurRadius;
 
+
 @end
 
 #if !__has_feature(objc_arc)
@@ -38,6 +39,17 @@
 @dynamic liveBlurring;
 
 #pragma mark - Init
+
+BOOL _usingBufferA;
+
+    CGContextRef _effectInContextA;
+    CGContextRef _effectInContextB;
+
+    vImage_Buffer _effectInBufferA;
+    vImage_Buffer _effectInBufferB;
+
+    vImage_Buffer _effectOutBufferA;
+    vImage_Buffer _effectOutBufferB;
 
 - (id)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
