@@ -272,69 +272,47 @@
 
     UIView *targetView = self.snapshotTargetView ?: self.superview;
     if (!targetView || !self.window) return;
-
+    
     CGSize scaledSize = self.scaledSize;
-    CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
-
-    // Hide self temporarily on main thread
+    
+    // Hide self temporarily
     self.hidden = YES;
 
-    // Copy any data needed from main thread (bounds, scale, etc)
-    __block CGRect rectToRender = rectInTarget;
-    __block CGFloat scaleFactor = _scaleFactor;
-    __block uint32_t blurKernel = _precalculatedBlurKernel;
-    __block vImage_Buffer effectIn = _effectInBuffer;
-    __block vImage_Buffer effectOut = _effectOutBuffer;
-    __block CGContextRef effectInContext = _effectInContext;
-    __block CGContextRef effectOutContext = _effectOutContext;
+    // Calculate self.bounds in targetView coordinates
+    CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        // Create offscreen bitmap context for rendering
-        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-        CGContextRef renderContext = CGBitmapContextCreate(NULL,
-                                                           scaledSize.width,
-                                                           scaledSize.height,
-                                                           8,
-                                                           4 * scaledSize.width,
-                                                           colorSpace,
-                                                           kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
-        CGColorSpaceRelease(colorSpace);
+    // Clear previous contents
+    CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-        // Set transform: flip + scale + translate
-        CGContextSaveGState(renderContext);
-        CGContextTranslateCTM(renderContext, 0, scaledSize.height);
-        CGContextScaleCTM(renderContext, scaleFactor, -scaleFactor);
-        CGContextTranslateCTM(renderContext, -rectToRender.origin.x, -rectToRender.origin.y);
+    // Set up transform: flip vertically, then scale, then translate
+    CGContextSaveGState(_effectInContext);
 
-        // Render layer tree into offscreen context
-        [targetView.layer renderInContext:renderContext];
+    // Flip Y-axis
+    CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
+    CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
 
-        CGContextRestoreGState(renderContext);
+    // Translate so we capture the correct area
+    CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-        // Get image from context
-        CGImageRef renderedImage = CGBitmapContextCreateImage(renderContext);
-        CGContextRelease(renderContext);
+    // Render targetView
+    [targetView.layer renderInContext:_effectInContext];
 
-        // Apply vImage box blur on background thread
-        uint8_t *data = CGBitmapContextGetData(effectInContext); // optional if you want to copy
-        vImage_Buffer localInBuffer = effectIn; // copy if needed
-        vImage_Buffer localOutBuffer = effectOut;
 
-        vImageBoxConvolve_ARGB8888(&localInBuffer, &localOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-        vImageBoxConvolve_ARGB8888(&localOutBuffer, &localInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-        vImageBoxConvolve_ARGB8888(&localInBuffer, &localOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    CGContextRestoreGState(_effectInContext);
 
-        // Create CGImage from blurred buffer
-        CGImageRef outImage = CGBitmapContextCreateImage(effectOutContext);
 
-        // Commit back to main thread
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.layer.contents = (__bridge id)(outImage);
-            CGImageRelease(outImage);
-            CGImageRelease(renderedImage);
-            self.hidden = NO;
-        });
-    });
+    self.hidden = NO;
+
+    // Apply box blur
+    uint32_t blurKernel = _precalculatedBlurKernel;
+    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+    vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+
+    // Commit to layer
+    CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
+    self.layer.contents = (__bridge id)(outImage);
+    CGImageRelease(outImage);
 }
 
 
