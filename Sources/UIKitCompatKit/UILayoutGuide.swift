@@ -35,25 +35,15 @@ public class UILayoutGuideShim {
     }
 
     // MARK: - Anchors forwarding to proxyView
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     public var topAnchor: Anchor { Anchor(view: proxyView, attribute: .top) }
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     public var bottomAnchor: Anchor { Anchor(view: proxyView, attribute: .bottom) }
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     public var leadingAnchor: Anchor { Anchor(view: proxyView, attribute: .leading) }
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     public var trailingAnchor: Anchor { Anchor(view: proxyView, attribute: .trailing) }
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     public var leftAnchor: Anchor { Anchor(view: proxyView, attribute: .left) }
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     public var rightAnchor: Anchor { Anchor(view: proxyView, attribute: .right) }
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     public var widthAnchor: Anchor { Anchor(view: proxyView, attribute: .width) }
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     public var heightAnchor: Anchor { Anchor(view: proxyView, attribute: .height) }
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     public var centerXAnchor: Anchor { Anchor(view: proxyView, attribute: .centerX) }
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     public var centerYAnchor: Anchor { Anchor(view: proxyView, attribute: .centerY) }
 
     // MARK: - layoutFrame returns actual frame
@@ -85,14 +75,12 @@ public extension UIView {
         objc_setAssociatedObject(self, &layoutGuidesKey, guides, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
 
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var layoutGuides: [UILayoutGuideShim] {
         get { objc_getAssociatedObject(self, &layoutGuidesKey) as? [UILayoutGuideShim] ?? [] }
         set { objc_setAssociatedObject(self, &layoutGuidesKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
 
     // MARK: - layoutMarginsGuide
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var layoutMarginsGuide: UILayoutGuide {
         if let guide = objc_getAssociatedObject(self, &layoutMarginsGuideKey) as? UILayoutGuide { return guide }
 
@@ -162,7 +150,6 @@ public class UILayoutSupportShim: NSObject {
 
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
 public extension UIViewController {
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var topLayoutGuide: UILayoutSupportShim {
         if let guide = objc_getAssociatedObject(self, &topGuideKey) as? UILayoutSupportShim { return guide }
         let statusBarHeight: CGFloat = UIApplication.shared.isStatusBarHidden ? 0 : 20
@@ -170,8 +157,7 @@ public extension UIViewController {
         objc_setAssociatedObject(self, &topGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         return guide
     }
-    
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
+
     var bottomLayoutGuide: UILayoutSupportShim {
         if let guide = objc_getAssociatedObject(self, &bottomGuideKey) as? UILayoutSupportShim { return guide }
         let guide = UILayoutSupportShim(length: 0)
