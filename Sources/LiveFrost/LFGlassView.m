@@ -275,42 +275,45 @@
 
     CGSize scaledSize = self.scaledSize;
 
-    // Hide self temporarily
-    self.hidden = YES;
+    // Determine which buffer to render into (double-buffering)
+    CGContextRef renderContext = _usingBufferA ? _effectInContextA : _effectInContextB;
+    vImage_Buffer *renderInBuffer = _usingBufferA ? &_effectInBufferA : &_effectInBufferB;
+    vImage_Buffer *renderOutBuffer = _usingBufferA ? &_effectOutBufferA : &_effectOutBufferB;
 
-    // Calculate self.bounds in targetView coordinates
     CGRect rectInTarget = [self convertRect:self.bounds toView:targetView];
 
-    // Clear previous contents
-    CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
+    // Clear the render context
+    CGContextClearRect(renderContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
 
-    // Dispatch async render to background queue
+    // Render asynchronously
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        // Transform: flip vertically, scale, translate
-        CGContextSaveGState(_effectInContext);
-        CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
-        CGContextScaleCTM(_effectInContext, _scaleFactor, -_scaleFactor);
-        CGContextTranslateCTM(_effectInContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
+        // Apply transforms: flip Y, scale, translate
+        CGContextSaveGState(renderContext);
+        CGContextTranslateCTM(renderContext, 0, scaledSize.height);
+        CGContextScaleCTM(renderContext, _scaleFactor, -_scaleFactor);
+        CGContextTranslateCTM(renderContext, -rectInTarget.origin.x, -rectInTarget.origin.y);
 
-        // Render targetView layer into context off the main thread
-        [targetView.layer renderInContext:_effectInContext];
+        // Render target view
+        [targetView.layer renderInContext:renderContext];
 
-        CGContextRestoreGState(_effectInContext);
+        CGContextRestoreGState(renderContext);
 
-        // Apply triple box blur
+        // Triple box blur
         uint32_t blurKernel = _precalculatedBlurKernel;
-        vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-        vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
-        vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+        vImageBoxConvolve_ARGB8888(renderInBuffer, renderOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+        vImageBoxConvolve_ARGB8888(renderOutBuffer, renderInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
+        vImageBoxConvolve_ARGB8888(renderInBuffer, renderOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 
-        // Create CGImage from output buffer
+        // Create CGImage from the output buffer
         CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
 
-        // Commit to layer on main thread
+        // Commit on main thread
         dispatch_async(dispatch_get_main_queue(), ^{
             self.layer.contents = (__bridge id)(outImage);
             CGImageRelease(outImage);
-            self.hidden = NO;
+
+            // Swap buffers for next frame
+            _usingBufferA = !_usingBufferA;
         });
     });
 }
