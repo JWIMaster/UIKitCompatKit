@@ -268,58 +268,6 @@
 
 UIImage* _UICreateScreenUIImage(void);
 
-- (CGRect)absoluteFrameInScreenForPrivateAPI {
-    // Start with the view’s bounds
-    CGRect frame = self.bounds;
-    UIView *view = self;
-
-    // Walk up the hierarchy to get absolute coordinates relative to the screen
-    while (view.superview) {
-        frame.origin.x += view.frame.origin.x;
-        frame.origin.y += view.frame.origin.y;
-        view = view.superview;
-    }
-
-    // Adjust for window origin
-    UIWindow *window = self.window ?: [UIApplication sharedApplication].keyWindow;
-    frame.origin.x += window.frame.origin.x;
-    frame.origin.y += window.frame.origin.y;
-
-    // Handle device orientation (screen capture is always portrait)
-    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
-    CGSize screenSize = [UIScreen mainScreen].bounds.size;
-
-    CGRect transformedFrame = frame;
-
-    switch (orientation) {
-        case UIInterfaceOrientationPortrait:
-            // No change needed
-            break;
-        case UIInterfaceOrientationLandscapeLeft:
-            transformedFrame = CGRectMake(frame.origin.y,
-                                          screenSize.width - frame.origin.x - frame.size.width,
-                                          frame.size.height,
-                                          frame.size.width);
-            break;
-        case UIInterfaceOrientationLandscapeRight:
-            transformedFrame = CGRectMake(screenSize.height - frame.origin.y - frame.size.height,
-                                          frame.origin.x,
-                                          frame.size.height,
-                                          frame.size.width);
-            break;
-        case UIInterfaceOrientationPortraitUpsideDown:
-            transformedFrame = CGRectMake(screenSize.width - frame.origin.x - frame.size.width,
-                                          screenSize.height - frame.origin.y - frame.size.height,
-                                          frame.size.width,
-                                          frame.size.height);
-            break;
-        default:
-            break;
-    }
-
-    return transformedFrame;
-}
-
 
 - (void)refresh {
     if (++_currentFrameInterval < _frameInterval) return;
@@ -336,56 +284,55 @@ UIImage* _UICreateScreenUIImage(void);
         return;
     }
 
-    // 2. Get screen scale
+    // 2. Screen scale (pixels per point)
     CGFloat screenScale = [UIScreen mainScreen].scale;
 
-    // 3. Compute absolute frame in screen coordinates (nested views)
-    CGRect frameInWindow = [self convertRect:self.bounds toView:nil]; // nil = window coordinates
+    // 3. Compute view frame in screen coordinates (nested views)
+    CGRect frameInWindow = [self convertRect:self.bounds toView:nil]; // points
     CGRect frameInPixels = CGRectMake(frameInWindow.origin.x * screenScale,
                                       frameInWindow.origin.y * screenScale,
                                       frameInWindow.size.width * screenScale,
                                       frameInWindow.size.height * screenScale);
 
-    // 4. Scale according to buffer
-    CGRect scaledRect = CGRectMake(frameInPixels.origin.x * _scaleFactor,
-                                   frameInPixels.origin.y * _scaleFactor,
-                                   frameInPixels.size.width * _scaleFactor,
-                                   frameInPixels.size.height * _scaleFactor);
+    // 4. Compute buffer size (scaled)
+    CGSize bufferSize = self.scaledSize; // already multiplied by _scaleFactor
 
-    CGSize scaledSize = self.scaledSize;
+    // 5. Compute scale factors between pixel frame and buffer
+    CGFloat xScale = bufferSize.width / frameInPixels.size.width;
+    CGFloat yScale = bufferSize.height / frameInPixels.size.height;
 
-    // 5. Clear previous contents
-    CGContextClearRect(_effectInContext, CGRectMake(0, 0, scaledSize.width, scaledSize.height));
+    // 6. Crop the screen image
+    CGImageRef croppedImage = CGImageCreateWithImageInRect(screenImage.CGImage, frameInPixels);
 
-    // 6. Draw cropped portion
-    CGImageRef croppedImage = CGImageCreateWithImageInRect(screenImage.CGImage, scaledRect);
-
+    // 7. Draw into buffer context
     CGContextSaveGState(_effectInContext);
 
-    // Flip vertically once
-    CGContextTranslateCTM(_effectInContext, 0, scaledSize.height);
+    // Clear previous contents
+    CGContextClearRect(_effectInContext, CGRectMake(0, 0, bufferSize.width, bufferSize.height));
+
+    // Flip vertically
+    CGContextTranslateCTM(_effectInContext, 0, bufferSize.height);
     CGContextScaleCTM(_effectInContext, 1.0, -1.0);
 
-    CGContextDrawImage(_effectInContext, CGRectMake(0, 0, scaledRect.size.width, scaledRect.size.height), croppedImage);
+    // Scale cropped image to buffer size
+    CGContextDrawImage(_effectInContext, CGRectMake(0, 0, bufferSize.width, bufferSize.height), croppedImage);
 
     CGContextRestoreGState(_effectInContext);
     CGImageRelease(croppedImage);
 
     self.hidden = NO;
 
-    // 7. Apply box blur
+    // 8. Apply blur
     uint32_t blurKernel = _precalculatedBlurKernel;
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectOutBuffer, &_effectInBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
     vImageBoxConvolve_ARGB8888(&_effectInBuffer, &_effectOutBuffer, NULL, 0, 0, blurKernel, blurKernel, 0, kvImageEdgeExtend);
 
-    // 8. Commit to layer
+    // 9. Commit to layer
     CGImageRef outImage = CGBitmapContextCreateImage(_effectOutContext);
     self.layer.contents = (__bridge id)(outImage);
     CGImageRelease(outImage);
 }
-
-
 
 
 
