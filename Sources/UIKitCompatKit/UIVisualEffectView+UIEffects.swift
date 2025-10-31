@@ -91,6 +91,7 @@ open class UIVisualEffectView: UIView {
         if let effect = effect {
             blurView.blurRadius = effect.radius
         }
+        blurView.frame = bounds
         blurView.scaleFactor = captureScale
         addSubview(blurView)
 
