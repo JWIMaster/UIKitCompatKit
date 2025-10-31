@@ -48,8 +48,6 @@ public class UIBlurEffect {
 open class UIVisualEffectView: UIView {
     public let contentView = UIView()
     public var effect: UIBlurEffect?
-    public let overlay = UIImageView()
-    private var displayLink: CADisplayLink?
     private var DeviceInfoClass = DeviceInfo()
     var device: ChipsetClass {
         return DeviceInfoClass.chipsetClass()
@@ -84,7 +82,6 @@ open class UIVisualEffectView: UIView {
         self.effect = effect
         super.init(frame: .zero)
         setup()
-        //startDisplayLink()
     }
     
 
@@ -96,105 +93,18 @@ open class UIVisualEffectView: UIView {
         }
         blurView.scaleFactor = captureScale
         addSubview(blurView)
-        
-        clipsToBounds = true
-        overlay.frame = bounds
-        overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        overlay.layer.compositingFilter = "screenBlendMode"
-        
-        //addSubview(overlay)
 
         contentView.frame = bounds
         contentView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         addSubview(contentView)
     }
     
-    override open func didMoveToSuperview() {
+    override open func didMoveToWindow() {
         blurView.snapshotTargetView = self.parentViewController?.view
     }
     
     
-    private func startDisplayLink() {
-        displayLink = CADisplayLink(target: self, selector: #selector(updateBlur))
-        displayLink?.add(to: .main, forMode: .common)
-    }
-
-    @objc public func updateBlur() {
-        guard let superview = superview else { return }
-        isHidden = true
-
-        // Downscale for performance
-        let scale: CGFloat = {
-            if effect!.chosenCaptureScale == 0 {
-                return captureScale
-            } else {
-                return effect!.chosenCaptureScale
-            }
-        }()
-        let blurRadius = effect!.radius*scale
-        print(blurRadius)
-        let scaledSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
-        UIGraphicsBeginImageContextWithOptions(scaledSize, false, 0)
-        let ctx = UIGraphicsGetCurrentContext()!
-        ctx.scaleBy(x: scale, y: scale)
-        ctx.translateBy(x: -frame.origin.x, y: -frame.origin.y)
-        superview.layer.render(in: ctx)
-        guard let snapshot = UIGraphicsGetImageFromCurrentImageContext() else {
-            UIGraphicsEndImageContext()
-            isHidden = false
-            return
-        }
-        UIGraphicsEndImageContext()
-        isHidden = false
-
-        // GPUImage blur + vibrancy
-        let picture = GPUImagePicture(image: snapshot)!
-        let blur = GPUImageGaussianBlurFilter()
-        blur.blurRadiusInPixels = CGFloat(Float(blurRadius))
-        let saturation = GPUImageSaturationFilter()
-        saturation.saturation = effect!.vibrancy
-        
-        overlay.image = saturation.imageFromCurrentFramebuffer()
-        //applyLightOverlay()
-        
-
-        picture.addTarget(blur)
-        blur.addTarget(saturation)
-        saturation.useNextFrameForImageCapture()
-        picture.processImage()
-
-        overlay.image = saturation.imageFromCurrentFramebuffer()
-
-        picture.removeAllTargets()
-        blur.removeAllTargets()
-        saturation.removeAllTargets()
-    }
     
-    
-    private func applyLightOverlay() {
-        guard let style = effect?.style else { return }
-
-        // Remove existing overlay layer if any
-        overlay.layer.sublayers?.removeAll(where: { $0.name == "LightOverlay" })
-
-        let overlayLayer = CALayer()
-        overlayLayer.name = "LightOverlay"
-        overlayLayer.frame = overlay.bounds
-
-        switch style {
-        case .light:
-            overlayLayer.backgroundColor = UIColor(white: 1, alpha: 0.25).cgColor
-        case .regular:
-            overlayLayer.backgroundColor = UIColor(white: 1, alpha: 0.25).cgColor
-        case .dark:
-            overlayLayer.backgroundColor = UIColor.clear.cgColor
-        }
-
-        overlay.layer.addSublayer(overlayLayer)
-    }
-
-
-    deinit { displayLink?.invalidate() }
 }
 
 
