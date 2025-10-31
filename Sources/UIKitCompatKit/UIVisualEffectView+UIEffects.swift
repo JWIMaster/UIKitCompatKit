@@ -1,5 +1,6 @@
 import UIKit
 import GPUImage1Swift
+import LiveFrost
 
 // MARK: - GPUBlurEffect (like UIBlurEffect)
 @available(iOS, introduced: 6.0, obsoleted: 8.0)
@@ -72,6 +73,7 @@ open class UIVisualEffectView: UIView {
         }
     }
     
+    private let blurView = LFGlassView()
     
     
     public init() {
@@ -82,13 +84,19 @@ open class UIVisualEffectView: UIView {
         self.effect = effect
         super.init(frame: .zero)
         setup()
-        startDisplayLink()
+        //startDisplayLink()
     }
     
 
     required public init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     private func setup() {
+        if let effect = effect {
+            blurView.blurRadius = effect.radius
+        }
+        blurView.scaleFactor = captureScale
+        addSubview(blurView)
+        
         clipsToBounds = true
         overlay.frame = bounds
         overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
