@@ -91,7 +91,6 @@ open class UIVisualEffectView: UIView {
         if let effect = effect {
             blurView.blurRadius = effect.radius
         }
-        blurView.frame = bounds
         blurView.scaleFactor = captureScale
         addSubview(blurView)
 
@@ -99,6 +98,12 @@ open class UIVisualEffectView: UIView {
         contentView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         addSubview(contentView)
     }
+    
+    override open func layoutSubviews() {
+        super.layoutSubviews()
+        blurView.frame = bounds
+    }
+
     
     override open func didMoveToWindow() {
         blurView.snapshotTargetView = self.parentViewController?.view
