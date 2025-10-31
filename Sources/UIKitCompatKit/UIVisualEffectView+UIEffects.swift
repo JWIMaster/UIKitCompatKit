@@ -95,7 +95,6 @@ open class UIVisualEffectView: UIView {
             blurView.blurRadius = effect.radius
         }
         blurView.scaleFactor = captureScale
-        blurView.snapshotTargetView = self.parentViewController?.view
         addSubview(blurView)
         
         clipsToBounds = true
@@ -109,7 +108,12 @@ open class UIVisualEffectView: UIView {
         contentView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         addSubview(contentView)
     }
-
+    
+    override open func didMoveToSuperview() {
+        blurView.snapshotTargetView = self.parentViewController?.view
+    }
+    
+    
     private func startDisplayLink() {
         displayLink = CADisplayLink(target: self, selector: #selector(updateBlur))
         displayLink?.add(to: .main, forMode: .common)
