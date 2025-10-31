@@ -1,5 +1,4 @@
 import UIKit
-import GPUImage1Swift
 import LiveFrost
 
 // MARK: - GPUBlurEffect (like UIBlurEffect)

@@ -13,13 +13,11 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // Add GPUImage1Swift as a dependency
-        .package(url: "https://github.com/JWIMaster/GPUImage1Swift.git", branch: "master"),
     ],
     targets: [
         .target(
             name: "UIKitCompatKit",
-            dependencies: ["OAStackView", "GPUImage1Swift", "LiveFrost"],
+            dependencies: ["OAStackView", "LiveFrost"],
             path: "Sources/UIKitCompatKit"
         ),
         .target(
