@@ -101,7 +101,7 @@ open class UIVisualEffectView: UIView {
         overlay.frame = bounds
         overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         overlay.layer.compositingFilter = "screenBlendMode"
-        addSubview(overlay)
+        //addSubview(overlay)
 
         contentView.frame = bounds
         contentView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
