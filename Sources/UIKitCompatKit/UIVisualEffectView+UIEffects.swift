@@ -95,12 +95,14 @@ open class UIVisualEffectView: UIView {
             blurView.blurRadius = effect.radius
         }
         blurView.scaleFactor = captureScale
+        blurView.snapshotTargetView = self.parentViewController?.view
         addSubview(blurView)
         
         clipsToBounds = true
         overlay.frame = bounds
         overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         overlay.layer.compositingFilter = "screenBlendMode"
+        
         //addSubview(overlay)
 
         contentView.frame = bounds
@@ -192,5 +194,17 @@ open class UIVisualEffectView: UIView {
 }
 
 
+fileprivate extension UIView {
+    var parentViewController: UIViewController? {
+        var responder: UIResponder? = self
+        while let r = responder {
+            if let vc = r as? UIViewController {
+                return vc
+            }
+            responder = r.next
+        }
+        return nil
+    }
+}
 
 
