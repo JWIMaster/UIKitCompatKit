@@ -102,6 +102,7 @@ public extension UIView {
 
     // MARK: - safeAreaLayoutGuide
     @available(iOS, introduced: 6.0, obsoleted: 11.0)
+    @_disfavoredOverload
     var safeAreaLayoutGuide: UILayoutGuide {
         if let guide = objc_getAssociatedObject(self, &safeAreaGuideKey) as? UILayoutGuide { return guide }
 
