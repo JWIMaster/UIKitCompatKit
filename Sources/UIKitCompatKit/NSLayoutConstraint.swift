@@ -55,6 +55,7 @@ public extension UIView {
     var trailingAnchor: Anchor { Anchor(view: self, attribute: .trailing) }
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @_disfavoredOverload
     var topAnchor: Anchor { Anchor(view: self, attribute: .top) }
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
@@ -62,21 +63,27 @@ public extension UIView {
     var bottomAnchor: Anchor { Anchor(view: self, attribute: .bottom) }
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @_disfavoredOverload
     var widthAnchor: Anchor { Anchor(view: self, attribute: .width) }
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @_disfavoredOverload
     var heightAnchor: Anchor { Anchor(view: self, attribute: .height) }
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @_disfavoredOverload
     var centerXAnchor: Anchor { Anchor(view: self, attribute: .centerX) }
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @_disfavoredOverload
     var centerYAnchor: Anchor { Anchor(view: self, attribute: .centerY) }
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @_disfavoredOverload
     var leftAnchor: Anchor { Anchor(view: self, attribute: .left) }
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @_disfavoredOverload
     var rightAnchor: Anchor { Anchor(view: self, attribute: .right) }
     
     @available(iOS, introduced: 1.0, deprecated: 2.0, message: "Beware. The cookywookywoo is a powerful string indeed. Use sparingly. (On a real note, this is just my package testing string since I replicate so many API's it's hard to tell who's implementation the app is choosing to use.")
@@ -152,6 +159,7 @@ public extension NSLayoutConstraint {
     }
     
     @available(iOS, introduced: 6.0, obsoleted: 8.0)
+    @_disfavoredOverload
     class func deactivate(_ constraints: [NSLayoutConstraint]) {
         for c in constraints { c.isActive = false }
     }
