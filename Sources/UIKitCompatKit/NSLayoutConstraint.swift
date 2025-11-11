@@ -102,6 +102,7 @@ public extension NSLayoutConstraint {
     }
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @_disfavoredOverload
     var isActive: Bool {
         get { activeConstraints.contains(self) }
         set {
@@ -138,6 +139,7 @@ public extension NSLayoutConstraint {
     // MARK: - Correct signatures (match UIKit)
     
     @available(iOS, introduced: 6.0, obsoleted: 8.0)
+    @_disfavoredOverload
     class func activate(_ constraints: [NSLayoutConstraint]) {
         for c in constraints { c.isActive = true }
     }
