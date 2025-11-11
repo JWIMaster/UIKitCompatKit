@@ -47,15 +47,18 @@ public class Anchor {
 // MARK: - UIView extension using safe internal anchors
 public extension UIView {
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @_disfavoredOverload
     var leadingAnchor: Anchor { Anchor(view: self, attribute: .leading) }
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @_disfavoredOverload
     var trailingAnchor: Anchor { Anchor(view: self, attribute: .trailing) }
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
     var topAnchor: Anchor { Anchor(view: self, attribute: .top) }
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @_disfavoredOverload
     var bottomAnchor: Anchor { Anchor(view: self, attribute: .bottom) }
     
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
