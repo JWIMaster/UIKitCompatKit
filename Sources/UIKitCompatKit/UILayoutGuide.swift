@@ -215,6 +215,7 @@ public extension UIView {
 }
 
 #if !canImport(UIMenu)
+@available(iOS, introduced: 6.0, obsoleted: 13.0)
 public class UIMenu {
     
 }
