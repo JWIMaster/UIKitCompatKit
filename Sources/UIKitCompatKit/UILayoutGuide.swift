@@ -213,17 +213,3 @@ public extension UIView {
         return sequence(first: self.next, next: { $0?.next }).compactMap { $0 as? UIViewController }.first
     }
 }
-
-#if !canImport(UIMenu)
-@available(iOS, introduced: 6.0, obsoleted: 13.0)
-public class _LegacyUIMenu {
-    public var title: String
-    public init(title: String) {
-        self.title = title
-    }
-}
-
-// Before iOS 13, alias our class as “UIMenu”
-@available(iOS, introduced: 6.0, obsoleted: 13.0)
-public typealias UIMenu = _LegacyUIMenu
-#endif
