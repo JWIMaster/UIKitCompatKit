@@ -214,7 +214,8 @@ public extension UIView {
     }
 }
 
-
+#if !canImport(UIKit.UIMenu)
 public class UIMenu {
     
 }
+#endif
