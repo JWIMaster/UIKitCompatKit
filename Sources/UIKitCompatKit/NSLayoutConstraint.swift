@@ -28,11 +28,75 @@ public class Anchor {
         return constraint
     }
     
+    public func constraint(lessThanOrEqualTo other: Anchor,
+                           multiplier: CGFloat = 1.0,
+                           constant: CGFloat = 0) -> NSLayoutConstraint {
+        let constraint = NSLayoutConstraint(
+            item: view!,
+            attribute: attribute,
+            relatedBy: .lessThanOrEqual,
+            toItem: other.view,
+            attribute: other.attribute,
+            multiplier: multiplier,
+            constant: constant
+        )
+        constraint.firstAnchor = self
+        constraint.secondAnchor = other
+        return constraint
+    }
+    
+    public func constraint(greaterThanOrEqualTo other: Anchor,
+                           multiplier: CGFloat = 1.0,
+                           constant: CGFloat = 0) -> NSLayoutConstraint {
+        let constraint = NSLayoutConstraint(
+            item: view!,
+            attribute: attribute,
+            relatedBy: .greaterThanOrEqual,
+            toItem: other.view,
+            attribute: other.attribute,
+            multiplier: multiplier,
+            constant: constant
+        )
+        constraint.firstAnchor = self
+        constraint.secondAnchor = other
+        return constraint
+    }
+    
     public func constraint(equalToConstant constant: CGFloat) -> NSLayoutConstraint {
         let constraint = NSLayoutConstraint(
             item: view!,
             attribute: attribute,
             relatedBy: .equal,
+            toItem: nil,
+            attribute: .notAnAttribute,
+            multiplier: 1,
+            constant: constant
+        )
+        constraint.firstAnchor = self
+        constraint.secondAnchor = nil
+        return constraint
+    }
+    
+    public func constraint(greaterThanOrEqualToConstant constant: CGFloat) -> NSLayoutConstraint {
+        let constraint = NSLayoutConstraint(
+            item: view!,
+            attribute: attribute,
+            relatedBy: .greaterThanOrEqual,
+            toItem: nil,
+            attribute: .notAnAttribute,
+            multiplier: 1,
+            constant: constant
+        )
+        constraint.firstAnchor = self
+        constraint.secondAnchor = nil
+        return constraint
+    }
+    
+    public func constraint(lessThanOrEqualToConstant constant: CGFloat) -> NSLayoutConstraint {
+        let constraint = NSLayoutConstraint(
+            item: view!,
+            attribute: attribute,
+            relatedBy: .lessThanOrEqual,
             toItem: nil,
             attribute: .notAnAttribute,
             multiplier: 1,
