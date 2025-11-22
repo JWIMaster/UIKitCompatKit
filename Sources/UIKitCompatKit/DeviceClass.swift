@@ -142,7 +142,7 @@ public class DeviceInfo {
             case "iPod2,1": // iPod touch (2nd gen)
                 return .unknown
             case "iPod3,1": // iPod touch (3rd gen)
-                return .unknown
+                return .a4
             case "iPod4,1": // iPod touch (4th gen)
                 return .a4
             case "iPod5,1": // iPod touch (5th gen)
