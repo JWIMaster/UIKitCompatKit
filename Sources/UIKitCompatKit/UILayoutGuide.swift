@@ -1,5 +1,5 @@
 #if !targetEnvironment(macCatalyst)
-
+#if compiler(<6.0)
 import UIKit
 import ObjectiveC
 
@@ -220,4 +220,5 @@ public extension UIView {
     }
 }
 
+#endif
 #endif

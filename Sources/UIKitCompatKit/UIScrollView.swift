@@ -1,5 +1,5 @@
 #if !targetEnvironment(macCatalyst)
-
+#if compiler(<6.0)
 import UIKit
 
 extension UIScrollView {
@@ -33,4 +33,5 @@ extension UIScrollView {
     }
 }
 
+#endif
 #endif

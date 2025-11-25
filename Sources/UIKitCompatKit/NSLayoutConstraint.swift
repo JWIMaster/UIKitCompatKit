@@ -1,5 +1,5 @@
 #if !targetEnvironment(macCatalyst)
-
+#if compiler(<6.0)
 import UIKit
 
 // MARK: - Internal Anchor Backport (safe names)
@@ -231,4 +231,5 @@ public extension NSLayoutConstraint {
     }
 }
 
+#endif
 #endif
