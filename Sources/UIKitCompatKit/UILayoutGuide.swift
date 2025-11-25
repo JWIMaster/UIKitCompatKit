@@ -68,7 +68,7 @@ private var safeAreaGuideKey: UInt8 = 0
 public extension UIView {
 
     // MARK: - addLayoutGuide backport
-    @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @available(iOS, introduced: 6.0, deprecated: 9.0)
     @_disfavoredOverload
     func addLayoutGuide(_ guide: UILayoutGuideShim) {
         guide.attach(to: self)
