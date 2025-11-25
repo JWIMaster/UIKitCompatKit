@@ -1,3 +1,5 @@
+#if !targetEnvironment(macCatalyst)
+
 import UIKit
 import CoreGraphics
 
@@ -23,6 +25,6 @@ public struct CGColorShim {
     }
 }
 
-
+#endif
 
 

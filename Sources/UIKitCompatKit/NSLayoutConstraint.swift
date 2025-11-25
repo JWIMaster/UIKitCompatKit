@@ -1,3 +1,5 @@
+#if !targetEnvironment(macCatalyst)
+
 import UIKit
 
 // MARK: - Internal Anchor Backport (safe names)
@@ -228,3 +230,5 @@ public extension NSLayoutConstraint {
         for c in constraints { c.isActive = false }
     }
 }
+
+#endif

@@ -1,3 +1,5 @@
+#if !targetEnvironment(macCatalyst)
+
 import UIKit
 
 extension UIScrollView {
@@ -30,3 +32,5 @@ extension UIScrollView {
         return guide
     }
 }
+
+#endif

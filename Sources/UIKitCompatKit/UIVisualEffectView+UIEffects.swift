@@ -1,3 +1,5 @@
+#if !targetEnvironment(macCatalyst)
+
 import UIKit
 import LiveFrost
 
@@ -127,3 +129,4 @@ fileprivate extension UIView {
 }
 
 
+#endif

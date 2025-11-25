@@ -1,4 +1,4 @@
-#if !(TARGET_OS_MACCATALYST)
+#if !targetEnvironment(macCatalyst)
 
 import UIKit
 import ObjectiveC
