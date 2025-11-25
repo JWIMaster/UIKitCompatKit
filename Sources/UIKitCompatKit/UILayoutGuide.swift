@@ -1,3 +1,5 @@
+#if !(TARGET_OS_MACCATALYST)
+
 import UIKit
 import ObjectiveC
 
@@ -214,3 +216,5 @@ public extension UIView {
         return sequence(first: self.next, next: { $0?.next }).compactMap { $0 as? UIViewController }.first
     }
 }
+
+#endif
