@@ -84,6 +84,8 @@ public extension UIView {
     }
 
     // MARK: - layoutMarginsGuide
+    @available(iOS, introduced: 6.0, obsoleted: 11.0)
+    @_disfavoredOverload
     var layoutMarginsGuide: UILayoutGuideShim {
         if let guide = objc_getAssociatedObject(self, &layoutMarginsGuideKey) as? UILayoutGuideShim { return guide }
 
