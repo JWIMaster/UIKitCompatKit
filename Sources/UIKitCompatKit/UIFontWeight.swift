@@ -15,6 +15,7 @@ public typealias UIFontWeight = Weight
 extension UIFont {
 
     //@available(iOS, introduced: 6.0, deprecated: 8.2)
+    @_disfavoredOverload
     public static func systemFont(ofSize size: CGFloat, weight: UIFontWeight) -> UIFont {
         switch weight {
         case .ultraLight:
@@ -35,6 +36,7 @@ extension UIFont {
     }
 
     @available(iOS, introduced: 6.0, deprecated: 13.0)
+    @_disfavoredOverload
     public static func monospacedSystemFont(ofSize size: CGFloat, weight: UIFontWeight) -> UIFont {
         switch weight {
         case .ultraLight, .thin, .light, .regular:
