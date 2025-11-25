@@ -177,7 +177,6 @@ public extension UIViewController {
 
 // MARK: - UIView safeAreaInsets backport
 private var safeAreaInsetsKey: UInt8 = 0
-@available(iOS, introduced: 6.0, obsoleted: 11.0)
 public extension UIView {
     
     @available(iOS, introduced: 6.0, obsoleted: 11.0)
