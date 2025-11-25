@@ -148,7 +148,7 @@ extension UILayoutGuide: CustomDebugStringConvertible {
 private var topGuideKey: UInt8 = 0
 private var bottomGuideKey: UInt8 = 0
 
-@available(iOS, introduced: 6.0, obsoleted: 9.0)
+@available(iOS, introduced: 6.0, deprecated: 9.0)
 public class UILayoutSupportShim: NSObject {
     public let length: CGFloat
     public init(length: CGFloat) { self.length = length }
@@ -156,6 +156,7 @@ public class UILayoutSupportShim: NSObject {
 
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
 public extension UIViewController {
+    @_disfavoredOverload
     var topLayoutGuide: UILayoutSupportShim {
         if let guide = objc_getAssociatedObject(self, &topGuideKey) as? UILayoutSupportShim { return guide }
         let statusBarHeight: CGFloat = UIApplication.shared.isStatusBarHidden ? 0 : 20
@@ -163,7 +164,8 @@ public extension UIViewController {
         objc_setAssociatedObject(self, &topGuideKey, guide, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         return guide
     }
-
+    
+    @_disfavoredOverload
     var bottomLayoutGuide: UILayoutSupportShim {
         if let guide = objc_getAssociatedObject(self, &bottomGuideKey) as? UILayoutSupportShim { return guide }
         let guide = UILayoutSupportShim(length: 0)
