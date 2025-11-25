@@ -1,7 +1,7 @@
 import UIKit
 
 // MARK: - Internal Anchor Backport (safe names)
-@available(iOS, introduced: 6.0, obsoleted: 9.0)
+@available(iOS, introduced: 6.0, deprecated: 9.0)
 public class Anchor {
     weak var view: UIView?
     let attribute: NSLayoutConstraint.Attribute
