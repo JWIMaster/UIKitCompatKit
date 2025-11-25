@@ -7,6 +7,7 @@ extension UIScrollView {
     }
 
     @available(iOS, introduced: 6.0, deprecated: 11.0)
+    @_disfavoredOverload
     public var contentLayoutGuide: UILayoutGuideShim {
         if let guide = objc_getAssociatedObject(self, &Keys.contentGuide) as? UILayoutGuideShim {
             return guide
@@ -18,6 +19,7 @@ extension UIScrollView {
     }
     
     @available(iOS, introduced: 6.0, deprecated: 11.0)
+    @_disfavoredOverload
     public var frameLayoutGuide: UILayoutGuideShim {
         if let guide = objc_getAssociatedObject(self, &Keys.frameGuide) as? UILayoutGuideShim {
             return guide

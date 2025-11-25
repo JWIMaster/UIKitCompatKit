@@ -17,7 +17,7 @@ public extension UIView {
 }
 
 // MARK: - UILayoutGuideShim (proxy-based)
-@available(iOS, introduced: 6.0, obsoleted: 9.0)
+@available(iOS, introduced: 6.0, deprecated: 9.0)
 public class UILayoutGuideShim {
     fileprivate weak var owningView: UIView?
     fileprivate let proxyView: UIView
@@ -67,6 +67,7 @@ public extension UIView {
 
     // MARK: - addLayoutGuide backport
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
+    @_disfavoredOverload
     func addLayoutGuide(_ guide: UILayoutGuideShim) {
         guide.attach(to: self)
 
@@ -81,10 +82,10 @@ public extension UIView {
     }
 
     // MARK: - layoutMarginsGuide
-    var layoutMarginsGuide: UILayoutGuide {
-        if let guide = objc_getAssociatedObject(self, &layoutMarginsGuideKey) as? UILayoutGuide { return guide }
+    var layoutMarginsGuide: UILayoutGuideShim {
+        if let guide = objc_getAssociatedObject(self, &layoutMarginsGuideKey) as? UILayoutGuideShim { return guide }
 
-        let guide = UILayoutGuide()
+        let guide = UILayoutGuideShim()
         guide.attach(to: self)
 
         // Pin proxyView to layoutMargins
@@ -103,10 +104,10 @@ public extension UIView {
     // MARK: - safeAreaLayoutGuide
     @available(iOS, introduced: 6.0, obsoleted: 11.0)
     @_disfavoredOverload
-    var safeAreaLayoutGuide: UILayoutGuide {
-        if let guide = objc_getAssociatedObject(self, &safeAreaGuideKey) as? UILayoutGuide { return guide }
+    var safeAreaLayoutGuide: UILayoutGuideShim {
+        if let guide = objc_getAssociatedObject(self, &safeAreaGuideKey) as? UILayoutGuideShim { return guide }
 
-        let guide = UILayoutGuide()
+        let guide = UILayoutGuideShim()
         guide.attach(to: self)
 
         var topInset: CGFloat = 0
