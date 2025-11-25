@@ -17,7 +17,7 @@ private class ClosureSleeve {
     @objc func invoke() { closure() }
 }
 
-@available(iOS, introduced: 6.0, obsoleted: 14.0)
+@available(iOS, introduced: 6.0, deprecated: 14.0)
 public extension UIButton {
     private struct AssociatedKeys {
         static var sleeves = "closureSleeves"
