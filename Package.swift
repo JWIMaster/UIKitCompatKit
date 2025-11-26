@@ -13,11 +13,12 @@ let package = Package(
         ),
     ],
     dependencies: [
+        .package(url: "https://github.com/JWIMaster/IBPCollectionViewCompositionalLayout", branch: "master")
     ],
     targets: [
         .target(
             name: "UIKitCompatKit",
-            dependencies: ["OAStackView", "LiveFrost"],
+            dependencies: ["OAStackView", "LiveFrost", "IBPCollectionViewCompositionalLayout"],
             path: "Sources/UIKitCompatKit"
         ),
         .target(
