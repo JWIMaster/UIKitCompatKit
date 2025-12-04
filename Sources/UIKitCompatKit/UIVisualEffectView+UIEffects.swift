@@ -1,5 +1,5 @@
 #if !targetEnvironment(macCatalyst)
-
+#if !canImport(UIKit.UILayoutGuide)
 import UIKit
 import LiveFrost
 
@@ -129,4 +129,5 @@ fileprivate extension UIView {
 }
 
 
+#endif
 #endif

@@ -1,5 +1,6 @@
 #if !targetEnvironment(macCatalyst)
 #if compiler(<6.0)
+#if !canImport(UIKit.UILayoutGuide)
 import UIKit
 import ObjectiveC
 
@@ -220,5 +221,6 @@ public extension UIView {
     }
 }
 
+#endif
 #endif
 #endif

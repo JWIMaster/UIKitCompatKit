@@ -1,5 +1,6 @@
 #if !targetEnvironment(macCatalyst)
 #if compiler(<6.0)
+#if !canImport(UIKit.UILayoutGuide)
 import UIKit
 
 extension UIScrollView {
@@ -33,5 +34,6 @@ extension UIScrollView {
     }
 }
 
+#endif
 #endif
 #endif
