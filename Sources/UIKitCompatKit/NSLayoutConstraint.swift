@@ -1,6 +1,6 @@
 #if !targetEnvironment(macCatalyst)
 #if compiler(<6.0)
-#if !canImport(UIKit.UILayoutGuide)
+#if !MODERN_BUILD
 import UIKit
 
 // MARK: - Internal Anchor Backport (safe names)
@@ -235,3 +235,4 @@ public extension NSLayoutConstraint {
 #endif
 #endif
 #endif
+

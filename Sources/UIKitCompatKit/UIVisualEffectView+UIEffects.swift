@@ -1,9 +1,9 @@
 #if !targetEnvironment(macCatalyst)
-#if !canImport(UIKit.UILayoutGuide)
+#if !MODERN_BUILD
 import UIKit
 import LiveFrost
 
-// MARK: - GPUBlurEffect (like UIBlurEffect)
+/// GPUBlurEffect (like UIBlurEffect)
 @available(iOS, introduced: 6.0, obsoleted: 8.0)
 public class UIBlurEffect {
     public enum Style {
