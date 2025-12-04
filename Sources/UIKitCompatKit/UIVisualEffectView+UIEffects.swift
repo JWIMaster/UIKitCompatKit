@@ -4,7 +4,7 @@ import UIKit
 import LiveFrost
 
 /// GPUBlurEffect (like UIBlurEffect)
-@available(iOS, introduced: 6.0, obsoleted: 8.0)
+@available(iOS, introduced: 6.0, deprecated: 8.0)
 public class UIBlurEffect {
     public enum Style {
         case light
