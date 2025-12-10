@@ -4,6 +4,7 @@
 import UIKit
 
 // MARK: - Internal Anchor Backport (safe names)
+@MainActor
 @available(iOS, introduced: 6.0, deprecated: 9.0)
 public class Anchor {
     weak var view: UIView?
@@ -112,6 +113,7 @@ public class Anchor {
 }
 
 // MARK: - UIView extension using safe internal anchors
+@MainActor
 public extension UIView {
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
     @_disfavoredOverload
@@ -164,6 +166,7 @@ private var firstAnchorKey: UInt8 = 0
 private var secondAnchorKey: UInt8 = 0
 private let activeConstraints: NSHashTable = NSHashTable<AnyObject>(options: .weakMemory)
 
+@MainActor
 @available(iOS, introduced: 6.0, obsoleted: 9.0)
 public extension NSLayoutConstraint {
     @available(iOS, introduced: 6.0, obsoleted: 9.0)
