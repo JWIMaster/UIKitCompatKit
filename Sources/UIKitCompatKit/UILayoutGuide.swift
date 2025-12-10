@@ -20,6 +20,7 @@ public extension UIView {
 }
 
 // MARK: - UILayoutGuideShim (proxy-based)
+@MainActor
 @available(iOS, introduced: 6.0, deprecated: 9.0)
 public class UILayoutGuideShim {
     fileprivate weak var owningView: UIView?

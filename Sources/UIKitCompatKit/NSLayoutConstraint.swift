@@ -3,7 +3,7 @@
 #if !MODERN_BUILD
 import UIKit
 
-// MARK: - Internal Anchor Backport (safe names)
+/// Expressive Anchor backport class, aiming to provide the fluid API of the more modern, iOS 9+ based constraint system. It should function nearly identically
 @MainActor
 @available(iOS, introduced: 6.0, deprecated: 9.0)
 public class Anchor {
